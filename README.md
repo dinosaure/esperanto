@@ -15,7 +15,7 @@ works on Windows, Linux and Mac.
 
 ## The toolchain
 
-The `cosmopolitan` toolchain (see [`toolchain/`][./toolchain] provides a
+The `cosmopolitan` toolchain (see [`toolchain/`](./toolchain)) provides a
 special compiler and a special `ld` script which integrates options needed
 to well-build the _caml runtime_ with Cosmopolitan.
 
@@ -81,8 +81,8 @@ default context is: 1.2M.
 **Warning**: About the usage of `sha256sum.com`, if you want to use it into
 another system (such as Windows), you should **NOT** run it into your host
 system and you directly copy the artifact as is into your another system.
-Indeed, with the [`ape.lds`] trick, the program modifies **itself** according
-to the system - it's why we need to do a `chmod +w sha256sum.com`.
+Indeed, with the [`ape.lds`][ape.lds] trick, the program modifies **itself**
+according to the system - it's why we need to do a `chmod +w sha256sum.com`.
 
 Then, you can write (whatever the system) you `sha256sum.com` as a simple
 program:
@@ -93,7 +93,7 @@ d2a84f4b8b650937ec8f73cd8be2c74add5a911ba64df27458ed8229da804a26
 
 ### A small example
 
-The distribution comes with a small example into [./example][./example] which
+The distribution comes with a small example into [./example](./example) which
 is a simple program which repeats what you want to say. I hope it will speak
 the same language as you...
 
