@@ -1,0 +1,22 @@
+opam-version: "2.0"
+maintainer: "Romain Calascibetta <romain.calascibetta@gmail.com>"
+authors: "Romain Calascibetta <romain.calascibetta@gmail.com>"
+homepage: "https://github.com/dinosaure/gilbraltar"
+bug-reports: "https://github.com/dinosaure/gilbraltar/issues/"
+license: "MIT"
+tags: "org:mirage"
+dev-repo: "git+https://github.com/dinosaure/gilbraltar.git"
+build: [
+  ["sh" "-c" "cd caml ; ./configure.sh --prefix=%{prefix}% --target=x86_64-esperanto-none-static"]
+  ["sh" "-c" "cd caml ; %{make}% -j%{jobs}%"]
+]
+install: ["sh" "-c" "cd caml ; %{make}% install" ]
+depends: [
+  "ocamlfind" {build}
+  "ocaml-src" {build}
+  "cosmopolitan" {build}
+  "ocaml" {>= "4.14.0" & < "4.15.0"}
+]
+synopsis: "An OCaml compiler with Cosmopolitan"
+description:
+  "An OCaml compiler (toolchain) with Cosmopolitan as the C library"

@@ -1,0 +1,9 @@
+(executable
+ (name extract)
+ (link_flags :standard -cclib "-z caml-startup")
+ (libraries decompress.de bigstringaf fmt digestif))
+
+(rule
+ (target extract.com)
+ (deps extract.exe)
+ (action (run objcopy -S -O binary %{deps} %{target})))

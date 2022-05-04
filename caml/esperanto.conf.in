@@ -1,0 +1,8 @@
+path(esperanto) = "@@PREFIX@@/esperanto-sysroot/lib"
+destdir(esperanto) = "@@PREFIX@@/esperanto-sysroot/lib"
+stdlib(esperanto) = "@@PREFIX@@/esperanto-sysroot/lib/ocaml"
+ocamlopt(esperanto) = "@@PREFIX@@/esperanto-sysroot/bin/ocamlopt"
+ocamlc(esperanto) = "@@PREFIX@@/esperanto-sysroot/bin/ocamlc"
+ocamlmklib(esperanto) = "@@PREFIX@@/esperanto-sysroot/bin/ocamlmklib"
+ocamldep(esperanto) = "@@PREFIX@@/esperanto-sysroot/bin/ocamldep"
+ocamlcp(esperanto) = "@@PREFIX@@/esperanto-sysroot/bin/ocamlcp"
