@@ -1,0 +1,13 @@
+(executable
+ (enabled_if
+  (= %{context_name} esperanto))
+ (link_flags :standard -cclib "-z caml-startup")
+ (name cat))
+
+(rule
+ (target cat.com)
+ (enabled_if
+  (= %{context_name} esperanto))
+ (mode promote)
+ (deps cat.exe)
+ (action (run objcopy -S -O binary %{deps} %{target})))

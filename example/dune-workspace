@@ -1,0 +1,8 @@
+(lang dune 2.0)
+(context (default))
+(context
+ (default
+  (name esperanto)
+  (toolchain esperanto)
+  (merlin)
+  (host default)))
