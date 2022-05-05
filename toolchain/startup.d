@@ -1,1 +1,0 @@
-startup.o: startup.c

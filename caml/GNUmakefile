@@ -33,9 +33,11 @@ ocaml/Makefile:
 # - We use LIBS with a stubbed out solo5 implementation to override the OCaml
 # 	configure link test
 # - We override OCAML_OS_TYPE since configure just hardcodes it to "Unix".
+# - We must tweak runtime/sys.c and runtime/signals.c to correctly set internal
+#   arrays to right **dynamic** values
 OC_CFLAGS=$(LOCAL_CFLAGS)
 OC_LIBS=-nostdlib $(MAKECONF_EXTRA_LIBS)
-ocaml/Makefile.config: ocaml/Makefile
+ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # configure: Do not build dynlink
 	sed -i -e 's/otherlibraries="dynlink"/otherlibraries=""/g' ocaml/configure
 # configure: Allow precise input of flags and libs
@@ -51,6 +53,9 @@ ocaml/Makefile.config: ocaml/Makefile
 	sed -i -e 's/write(/_write(/' ocaml/runtime/extern.c
 # roots_nats.c defines a link structure which is in conflict with Cosmopolitan [link] function
 	sed -i -e 's/\([^_]\)link/\1link_t/g' ocaml/runtime/roots_nat.c
+# externalize some functions needed by our [startup.o] into [sys.c] and [signals.c]
+	cat esperanto_sys.c >> ocaml/runtime/sys.c
+	cat esperanto_signals.c >> ocaml/runtime/signals.c
 	echo -e "ocamlrun:\n\tcp $(shell which ocamlrun) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlrund:\n\tcp $(shell which ocamlrund) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlruni:\n\tcp $(shell which ocamlruni) .\n" >> ocaml/runtime/Makefile

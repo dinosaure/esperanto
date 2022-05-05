@@ -34,10 +34,6 @@ all_TARGETS := bin/$(CONFIG_TARGET_TRIPLE)-cc \
     lib/cosmopolitan \
     include/cosmopolitan/cosmopolitan.h
 
-extract.com:
-	@echo "BUILD extract.com"
-	@./build.sh
-
 cosmopolitan_OBJECTS := $(shell ./extract.com list)
 HEADER    := $(filter %.h,$(cosmopolitan_OBJECTS))
 ARCHIVE   := $(filter %.a,$(cosmopolitan_OBJECTS))
@@ -68,9 +64,9 @@ include/cosmopolitan/cosmopolitan.h: $(HEADER)
 	@echo "GEN $@"
 	@cp $< $@
 	@echo "PATCH $@"
-	@echo '#include "esperanto.h"' >> $@
+	@echo '\n#include "esperanto.h"' >> $@
 
-%.o: %.c
+%.o: %.c include/cosmopolitan/cosmopolitan.h
 	$(HOSTCOMPILE.c)
 
 lib/cosmopolitan: $(ARCHIVE) $(LINK) $(OBJECTS) startup.o
@@ -115,7 +111,7 @@ clean:
 	@echo "CLEAN toolchain"
 	$(RM) -r dst/ bin/ lib/
 	$(RM) include/cosmopolitan/cosmopolitan.h
-	$(RM) startup.o
+	$(RM) startup.o startup.d
 
 .PHONY: distclean
 distclean: clean
