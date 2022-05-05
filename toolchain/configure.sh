@@ -301,7 +301,6 @@ else
 fi
 TARGET_CC_MACHINE=$(${TARGET_CC} -dumpmachine)
 
-CONFIG_HVT= CONFIG_SPT= CONFIG_VIRTIO= CONFIG_MUEN= CONFIG_XEN=
 case ${TARGET_CC_MACHINE} in
     x86_64-*|amd64-*)
         TARGET_ARCH=x86_64
@@ -317,7 +316,7 @@ case ${TARGET_CC_MACHINE} in
         ;;
 esac
 
-TARGET_CC_CFLAGS=
+TARGET_CC_CFLAGS=-D__ESPERANTO__
 TARGET_CC_IS_OPENBSD=
 case ${TARGET_CC_MACHINE} in
     x86_64-*linux*|powerpc64le-*linux*|ppc64le-*linux*)
