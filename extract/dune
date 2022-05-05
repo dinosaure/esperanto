@@ -6,4 +6,5 @@
 (rule
  (target extract.com)
  (deps extract.exe)
+ (mode promote)
  (action (run objcopy -S -O binary %{deps} %{target})))

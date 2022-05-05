@@ -7,8 +7,7 @@ all: ocaml esperanto.conf
 TOP=$(abspath .)
 
 # CFLAGS used to build ocaml runtime
-# - We define __OCAML__ to try to fix some Cosmopolitan's definitions
-LOCAL_CFLAGS=$(MAKECONF_CFLAGS) -D__OCAML__
+LOCAL_CFLAGS=$(MAKECONF_CFLAGS)
 # CFLAGS used by the OCaml compiler to build C stubs
 GLOBAL_CFLAGS=$(MAKECONF_CFLAGS)
 # LIBS used by the OCaml compiler to link executables
