@@ -1,0 +1,17 @@
+--- gethost.c
++++ gethost.c
+@@ -74,11 +74,9 @@
+     res = caml_alloc_small(4, 0);
+     Field(res, 0) = name;
+     Field(res, 1) = aliases;
+-    switch (entry->h_addrtype) {
+-    case PF_UNIX:          Field(res, 2) = Val_int(0); break;
+-    case PF_INET:          Field(res, 2) = Val_int(1); break;
+-    default: /*PF_INET6 */ Field(res, 2) = Val_int(2); break;
+-    }
++    if (entry->h_addrtype == PF_UNIX) { Field(res, 2) = Val_int(0); }
++    else if (entry->h_addrtype == PF_INET) { Field(res, 2) = Val_int(1); }
++    else { Field(res, 2) = Val_int(2); }
+     Field(res, 3) = addr_list;
+   End_roots();
+   return res;

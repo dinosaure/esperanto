@@ -1,0 +1,45 @@
+--- socketaddr.c
++++ socketaddr.c
+@@ -118,8 +118,7 @@
+     return alloc_unix_sockaddr(caml_alloc_string(0));
+   }
+ 
+-  switch(adr->s_gen.sa_family) {
+-  case AF_UNIX:
++  if (adr->s_gen.sa_family == AF_UNIX)
+     { /* Based on recommendation in section BUGS of Linux unix(7). See
+          http://man7.org/linux/man-pages/man7/unix.7.html. */
+       mlsize_t struct_offset = offsetof(struct sockaddr_un, sun_path);
+@@ -140,29 +139,26 @@
+       res = alloc_unix_sockaddr(
+         caml_alloc_initialized_string(path_length, (char *)adr->s_unix.sun_path)
+       );
+-      break;
+     }
+-  case AF_INET:
++  else if (adr->s_gen.sa_family == AF_INET)
+     { value a = alloc_inet_addr(&adr->s_inet.sin_addr);
+       Begin_root (a);
+         res = caml_alloc_small(2, 1);
+         Field(res,0) = a;
+         Field(res,1) = Val_int(ntohs(adr->s_inet.sin_port));
+       End_roots();
+-      break;
+     }
+ #ifdef HAS_IPV6
+-  case AF_INET6:
++  else if (adr->s_gen.sa_family == AF_INET6)
+     { value a = alloc_inet6_addr(&adr->s_inet6.sin6_addr);
+       Begin_root (a);
+         res = caml_alloc_small(2, 1);
+         Field(res,0) = a;
+         Field(res,1) = Val_int(ntohs(adr->s_inet6.sin6_port));
+       End_roots();
+-      break;
+     }
+ #endif
+-  default:
++  else {
+     if (close_on_error != -1) close (close_on_error);
+     unix_error(EAFNOSUPPORT, "", Nothing);
+   }
