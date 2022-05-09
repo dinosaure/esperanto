@@ -1,0 +1,32 @@
+.
+├── ctype.h
+├── dirent.h
+├── endian.h
+├── errno.h
+├── esperanto.h
+├── fcntl.h
+├── float.h
+├── limits.h
+├── math.h
+├── setjmp.h
+├── signal.h
+├── stdarg.h
+├── stddef.h
+├── stdint.h
+├── stdio.h
+├── stdlib.h
+├── string.h
+├── strings.h
+├── sys
+│   ├── dir.h
+│   ├── ioctl.h
+│   ├── resource.h
+│   ├── stat.h
+│   ├── time.h
+│   ├── times.h
+│   ├── types.h
+│   └── wait.h
+├── time.h
+└── tree.a
+
+1 directory, 28 files
