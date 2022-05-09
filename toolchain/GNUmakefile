@@ -85,9 +85,11 @@ all: $(all_TARGETS)
 DESTDIR ?=
 PREFIX := $(CONFIG_PREFIX)
 DESTINATION := $(DESTDIR)$(PREFIX)
-TOOLCHAIN_LIBDIR := $(DESTINATION)/lib/$(CONFIG_TARGET_TRIPLE)
-TOOLCHAIN_INCDIR := $(DESTINATION)/include/$(CONFIG_TARGET_TRIPLE)
-TOOLCHAIN_SYSDIR := $(DESTINATION)/include/$(CONFIG_TARGET_TRIPLE)/sys
+TOOLCHAIN_LIBDIR     := $(DESTINATION)/lib/$(CONFIG_TARGET_TRIPLE)
+TOOLCHAIN_INCDIR     := $(DESTINATION)/include/$(CONFIG_TARGET_TRIPLE)
+TOOLCHAIN_SYSDIR     := $(DESTINATION)/include/$(CONFIG_TARGET_TRIPLE)/sys
+TOOLCHAIN_ARPADIR    := $(DESTINATION)/include/$(CONFIG_TARGET_TRIPLE)/arpa
+TOOLCHAIN_NETINETDIR := $(DESTINATION)/include/$(CONFIG_TARGET_TRIPLE)/netinet
 INSTALL := install -p
 
 .PHONY: install
@@ -97,7 +99,8 @@ install: all
 	$(INSTALL) -m 0755 bin/$(CONFIG_TARGET_TRIPLE)-cc $(DESTINATION)/bin
 	$(INSTALL) -m 0755 bin/$(CONFIG_TARGET_TRIPLE)-ld $(DESTINATION)/bin
 	$(INSTALL) -m 0755 bin/$(CONFIG_TARGET_TRIPLE)-objcopy $(DESTINATION)/bin
-	@mkdir -p $(TOOLCHAIN_LIBDIR) $(TOOLCHAIN_INCDIR) $(TOOLCHAIN_SYSDIR)
+	@mkdir -p $(TOOLCHAIN_LIBDIR) $(TOOLCHAIN_INCDIR) $(TOOLCHAIN_SYSDIR) \
+		$(TOOLCHAIN_ARPADIR) $(TOOLCHAIN_NETINETDIR)
 	cd lib/cosmopolitan && \
 		find . -type f -exec $(INSTALL) -m 0644 \
 		"{}" "$(TOOLCHAIN_LIBDIR)/{}" \;
@@ -107,6 +110,12 @@ install: all
 	cd include/cosmopolitan/sys && \
 		find . -type f -exec $(INSTALL) -m 0644 "{}" \
 		"$(TOOLCHAIN_SYSDIR)/{}" \;
+	cd include/cosmopolitan/arpa && \
+		find . -type f -exec $(INSTALL) -m 0644 "{}" \
+		"$(TOOLCHAIN_ARPADIR)/{}" \;
+	cd include/cosmopolitan/netinet && \
+		find . -type f -exec $(INSTALL) -m 0644 "{}" \
+		"$(TOOLCHAIN_NETINETDIR)/{}" \;
 
 .PHONY: clean
 clean:
