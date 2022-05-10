@@ -65,7 +65,8 @@ include/cosmopolitan/cosmopolitan.h: $(HEADER)
 	@echo "GEN $@"
 	@cp $< $@
 	@echo "PATCH $@"
-	@echo '\n#include "esperanto.h"' >> $@
+	@echo '' >> $@
+	@echo '#include "esperanto.h"' >> $@
 
 %.o: %.c include/cosmopolitan/cosmopolitan.h
 	$(HOSTCOMPILE.c)
