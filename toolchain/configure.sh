@@ -339,6 +339,17 @@ case ${TARGET_CC_MACHINE} in
         ;;
 esac
 
+# Only [GCC] implements for any architectures -mnop-mcount.
+# For [Clang], this option is only available for z/Architecture.
+CC="${HOST_CC} -fno-pie" cc_check_option -mnop-mcount && \
+	HOST_CC_CFLAGS="${HOST_CC_CFLAGS} -mnop-mcount"
+CC="${TARGET_CC} -fno-pie" cc_check_option -mnop-mcount && \
+	TARGET_CC_CFLAGS="${TARGET_CC_CFLAGS} -mnop-mcount"
+
+# [Clang] complains about unused arguments
+CC="${TARGET_CC}" cc_is_clang &&
+	TARGET_CC_CFLAGS="${TARGET_CC_CFLAGS} -Qunused-arguments"
+
 echo "${prog_NAME}:" \
     "Using ${TARGET_CC} for target compiler (${TARGET_CC_MACHINE})"
 
