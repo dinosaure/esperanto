@@ -62,6 +62,7 @@ Z=
 S=
 G=
 A=
+WITH_UNIX=
 for arg do
     shift
     if [ -n "${Z}" ]; then
@@ -97,9 +98,8 @@ for arg do
             fi
     esac
 
-    if [ "${arg##*.}" = "s" ]; then
-	    A=set
-    fi
+    [ "${arg##*.}" = "s" ] && A=set
+    [ "${arg}" = "-lunix" ] && WITH_UNIX=set
 
     set -- "$@" "$arg"
 done
@@ -121,11 +121,12 @@ case ${M} in
         [ -n "${S}" ] && S="${L}/startup.o"
         [ -n "${__V}" ] && set -x
 	[ -z "${G}" -a -z "${A}" ] && G="-g" || G=
+	[ -n "${WITH_UNIX}" ]  && WITH_UNIX="${L}/startup_unix.o" || WITH_UNIX="${L}/fake_unix.o"
         exec @@CONFIG_TARGET_CC@@ \
             @@CONFIG_TARGET_CC_CFLAGS@@ \
 	    ${G} -Os -static -nostdlib -nostdinc \
 	    -fno-pie -no-pie -mno-red-zone -fno-omit-frame-pointer -pg \
-            @@CONFIG_TARGET_CC_LDFLAGS@@ ${S} ${B} \
+            @@CONFIG_TARGET_CC_LDFLAGS@@ ${WITH_UNIX} ${S} ${B} \
             "$@" \
             -fuse-ld=bfd -Wl,-T,${L}/ape.lds \
 	    -I ${I} \
