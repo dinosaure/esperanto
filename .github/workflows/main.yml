@@ -1,0 +1,30 @@
+name: Compile
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest]
+        ocaml-version: ["4.14.0"]
+    runs-on: ${{ matrix.operating-system }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: ${{ matrix.ocaml-version }}
+# See jart/cosmopolitan#3
+    - name: Fix binfmt and Cosmopolitan
+      run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+    - name: Pinning packages
+      run: opam pin add -n -t -y .
+    - name: Install cosmopolitan/esperanto and dune
+      run: opam depext -iyt -v cosmopolitan esperanto dune
+    - name: Compiling example project (cat.com)
+      run: |
+        cd example/
+        opam install ocamlfind
+        opam exec -- dune build ./cat.com
+    - name: Execute cat.com
+      run: |
+        cd example/
+        ./cat.com < cat.ml

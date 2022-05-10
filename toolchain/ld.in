@@ -35,6 +35,14 @@
 # - FreeBSD        (SUPPORT |= 0b0100000)
 # - NetBSD         (SUPPORT |= 0b1000000)
 # ABI defaults to '0b1111111' to support all systems.
+#
+# We introspect -g option and if we want to compile an assembler code. If -g
+# if already set, we don't add it and if we want to compile an assembler code
+# (a *.s file), we don't even add it (for binutils.2.34, it seems that a call
+# to GCC with -g leads to an error "file number 1 already allocated" because
+# OCaml emits something on this table, GCC wants to emit something on this
+# table and [as] wants to emit something too... - the error disappears with
+# binutils.2.36).
 
 L="$(dirname $0)/../lib/@@CONFIG_TARGET_TRIPLE@@"
 [ ! -d "${L}" ] && echo "$0: Could not determine library path" 1>&2 && exit 1
@@ -42,6 +50,8 @@ L="$(dirname $0)/../lib/@@CONFIG_TARGET_TRIPLE@@"
 # support, this is intentional
 B=
 Z=
+S=
+G=
 S=
 for arg do
     shift
@@ -65,6 +75,8 @@ for arg do
     fi
 
     case "$arg" in
+	-g)
+	    G=set
         -z)
             if [ -z "${Z}" ]; then
                 Z=1
@@ -72,13 +84,18 @@ for arg do
             fi
             ;;
     esac
+
+    if [ "${arg##*.}" = "s" ]; then
+	    A=set
+    fi
+
     set -- "$@" "$arg"
 done
 [ -n "${B}" ] && B="-DSUPPORT_VECTOR=${B}"
 [ -n "${S}" ] && S="${L}/startup.o"
-[ -n "${__V}" ] && set -x
+[ -z "${G}" -a -z "${A}" ] && G="-g" || G=
 exec @@CONFIG_TARGET_LD@@ \
-    -g -Os -static -nostdlib \
+    ${G} -static -nostdlib \
     @@CONFIG_TARGET_LD_LDFLAGS@@ ${S} ${B} "$@" \
     -fuse-ld=bfd -T ${L}/ape.lds \
     ${S} ${L}/crt.o ${L}/ape.o ${L}cosmopolitan.a

@@ -241,6 +241,7 @@ done
 #
 HOST_CC=${HOST_CC:-cc}
 HOST_CC_MACHINE=$(${HOST_CC} -dumpmachine)
+HOST_CC_CFLAGS="-g -Os -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone -fno-omit-frame-pointer -pg"
 [ $? -ne 0 ] &&
     die "Could not run '${HOST_CC} -dumpmachine', is your compiler working?"
 echo "${prog_NAME}: Using ${HOST_CC} for host compiler (${HOST_CC_MACHINE})"
@@ -338,6 +339,17 @@ case ${TARGET_CC_MACHINE} in
         ;;
 esac
 
+# Only [GCC] implements for any architectures -mnop-mcount.
+# For [Clang], this option is only available for z/Architecture.
+CC="${HOST_CC} -fno-pie" cc_check_option -mnop-mcount && \
+	HOST_CC_CFLAGS="${HOST_CC_CFLAGS} -mnop-mcount"
+CC="${TARGET_CC} -fno-pie" cc_check_option -mnop-mcount && \
+	TARGET_CC_CFLAGS="${TARGET_CC_CFLAGS} -mnop-mcount"
+
+# [Clang] complains about unused arguments
+CC="${TARGET_CC}" cc_is_clang &&
+	TARGET_CC_CFLAGS="${TARGET_CC_CFLAGS} -Qunused-arguments"
+
 echo "${prog_NAME}:" \
     "Using ${TARGET_CC} for target compiler (${TARGET_CC_MACHINE})"
 
@@ -408,6 +420,15 @@ echo "${prog_NAME}: Using ${TARGET_OBJCOPY} for target objcopy"
 TARGET_TRIPLE="${TARGET_ARCH}-esperanto-none-static"
 echo "${prog_NAME}: Target toolchain triple is ${TARGET_TRIPLE}"
 
+TARGET_CC_VERSION=$(${TARGET_CC} -dumpversion)
+
+if CC="${TARGET_CC}" cc_is_gcc;
+then echo "${prog_NAME}: cc is gcc ${TARGET_CC_VERSION}"
+elif CC="${TARGET_CC}" cc_is_clang;
+then echo "${prog_NAME}: cc is clang ${TARGET_CC_VERSION}"
+else echo "${prog_NAME}: cc is unknwon"
+fi
+
 #
 # Generate Makeconf, to be included by Makefiles.
 #
@@ -417,6 +438,7 @@ CONFIG_PREFIX=${OPT_PREFIX}
 CONFIG_HOST_ARCH=${CONFIG_HOST_ARCH}
 CONFIG_HOST=${CONFIG_HOST}
 CONFIG_HOST_CC=${HOST_CC}
+CONFIG_HOST_CC_CFLAGS=${HOST_CC_CFLAGS}
 CONFIG_TARGET_ARCH=${TARGET_ARCH}
 CONFIG_TARGET_TRIPLE=${TARGET_TRIPLE}
 CONFIG_TARGET_CC=${TARGET_CC}
@@ -433,10 +455,5 @@ EOM
 # Generate Makeconf.sh, to be included by shell scripts.
 #
 sed -Ee 's/^([A-Z_]+)=(.*)$/\1="\2"/' Makeconf >Makeconf.sh
-
-#
-# Generate extract.com
-#
-./build.sh
 
 cleanup

@@ -10,13 +10,11 @@ build: [
   [ "sh" "-c" "cd toolchain ; ./configure.sh --prefix=%{prefix}%" ]
   [ "sh" "-c" "cd toolchain ; %{make}% all" ]
 ]
+# We should depend on conf-binutils but the package does not work on FreeBSD
+# even if we can do [pkg install binutils] on FreeBSD 12
+# depends: [
+#   "conf-binutils"
+# ]
 install: [ "sh" "-c" "cd toolchain ; %{make}% install" ]
-depends: [
-  "ocamlfind" {build}
-  "conf-gcc"
-  "digestif"
-  "camlzip"
-  "fmt"
-]
 synopsis: "Cosmopolitan toolchain for OCaml compiler"
 description: "A little toolchain for OCaml with Cosmopolitan"
