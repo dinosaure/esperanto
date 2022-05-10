@@ -241,6 +241,7 @@ done
 #
 HOST_CC=${HOST_CC:-cc}
 HOST_CC_MACHINE=$(${HOST_CC} -dumpmachine)
+HOST_CC_CFLAGS="-g -Os -nostdlib -nostdinc -fno-pie -no-pie -mno-red-zone -fno-omit-frame-pointer -pg"
 [ $? -ne 0 ] &&
     die "Could not run '${HOST_CC} -dumpmachine', is your compiler working?"
 echo "${prog_NAME}: Using ${HOST_CC} for host compiler (${HOST_CC_MACHINE})"
@@ -417,6 +418,7 @@ CONFIG_PREFIX=${OPT_PREFIX}
 CONFIG_HOST_ARCH=${CONFIG_HOST_ARCH}
 CONFIG_HOST=${CONFIG_HOST}
 CONFIG_HOST_CC=${HOST_CC}
+CONFIG_HOST_CC_CFLAGS=${HOST_CC_CFLAGS}
 CONFIG_TARGET_ARCH=${TARGET_ARCH}
 CONFIG_TARGET_TRIPLE=${TARGET_TRIPLE}
 CONFIG_TARGET_CC=${TARGET_CC}
