@@ -34,6 +34,7 @@ all_TARGETS := bin/$(CONFIG_TARGET_TRIPLE)-cc \
     lib/cosmopolitan \
     include/cosmopolitan/cosmopolitan.h
 
+SHELL     := /bin/sh
 cosmopolitan_OBJECTS := $(shell ./extract.com list)
 HEADER    := $(filter %.h,$(cosmopolitan_OBJECTS))
 ARCHIVE   := $(filter %.a,$(cosmopolitan_OBJECTS))
