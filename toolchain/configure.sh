@@ -445,9 +445,4 @@ EOM
 #
 sed -Ee 's/^([A-Z_]+)=(.*)$/\1="\2"/' Makeconf >Makeconf.sh
 
-#
-# Generate extract.com
-#
-./build.sh
-
 cleanup
