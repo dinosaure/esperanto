@@ -409,6 +409,15 @@ echo "${prog_NAME}: Using ${TARGET_OBJCOPY} for target objcopy"
 TARGET_TRIPLE="${TARGET_ARCH}-esperanto-none-static"
 echo "${prog_NAME}: Target toolchain triple is ${TARGET_TRIPLE}"
 
+TARGET_CC_VERSION=$(${TARGET_CC} -dumpversion)
+
+if CC="${TARGET_CC}" cc_is_gcc;
+then echo "${prog_NAME}: cc is gcc ${TARGET_CC_VERSION}"
+elif CC="${TARGET_CC}" cc_is_clang;
+then echo "${prog_NAME}: cc is clang ${TARGET_CC_VERSION}"
+else echo "${prog_NAME}: cc is unknwon"
+fi
+
 #
 # Generate Makeconf, to be included by Makefiles.
 #
