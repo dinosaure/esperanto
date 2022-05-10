@@ -8,6 +8,7 @@
  * values given by Cosmopolitan **after** the APE boot. */
 extern void _esperanto_init_sys_open_flags(const int[]);
 extern void _esperanto_init_posix_signals(const int[]);
+extern void _esperanto_init_unit(void);
 
 int main(int argc, char *argv[]) {
   int open_flags[] = {
@@ -22,6 +23,7 @@ int main(int argc, char *argv[]) {
 
   _esperanto_init_sys_open_flags(open_flags);
   _esperanto_init_posix_signals(posix_signals);
+  _esperanto_init_unix();
 
   caml_startup(
       argv); // TODO(dinosaure): check if [argv] terminates with [NULL].

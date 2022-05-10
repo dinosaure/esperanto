@@ -53,6 +53,7 @@ Z=
 S=
 G=
 S=
+WITHUNIX=
 for arg do
     shift
     if [ -n "${Z}" ]; then
@@ -85,17 +86,17 @@ for arg do
             ;;
     esac
 
-    if [ "${arg##*.}" = "s" ]; then
-	    A=set
-    fi
+    [ "${arg##*.}" = "s" ] && A=set
+    [ "${arg}" = "-lunix" ] && WITH_UNIX=set
 
     set -- "$@" "$arg"
 done
 [ -n "${B}" ] && B="-DSUPPORT_VECTOR=${B}"
 [ -n "${S}" ] && S="${L}/startup.o"
 [ -z "${G}" -a -z "${A}" ] && G="-g" || G=
+[ -n "${WITH_UNIX}" ]  && WITH_UNIX="${L}/startup_unix.o" || WITH_UNIX="${L}/fake_unix.o"
 exec @@CONFIG_TARGET_LD@@ \
     ${G} -static -nostdlib \
     @@CONFIG_TARGET_LD_LDFLAGS@@ ${S} ${B} "$@" \
     -fuse-ld=bfd -T ${L}/ape.lds \
-    ${S} ${L}/crt.o ${L}/ape.o ${L}cosmopolitan.a
+    ${WITH_UNIX} ${S} ${L}/crt.o ${L}/ape.o ${L}cosmopolitan.a

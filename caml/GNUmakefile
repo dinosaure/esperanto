@@ -55,6 +55,14 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # externalize some functions needed by our [startup.o] into [sys.c] and [signals.c]
 	cat esperanto_sys.c >> ocaml/runtime/sys.c
 	cat esperanto_signals.c >> ocaml/runtime/signals.c
+	cat esperanto_permission.c >> ocaml/otherlibs/unix/access.c
+	cat esperanto_open.c >> ocaml/otherlibs/unix/open.c
+	cat esperanto_socket.c >> ocaml/otherlibs/unix/socket.c
+	cat esperanto_sockopt.c >> ocaml/otherlibs/unix/sockopt.c
+	cat esperanto_unixsupport.c >> ocaml/otherlibs/unix/unixsupport.c
+	cat esperanto_wait.c >> ocaml/otherlibs/unix/wait.c
+	patch ocaml/otherlibs/unix/gethost.c esperanto_gethost.patch
+	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.patch
 	echo -e "ocamlrun:\n\tcp $(shell which ocamlrun) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlrund:\n\tcp $(shell which ocamlrund) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlruni:\n\tcp $(shell which ocamlruni) .\n" >> ocaml/runtime/Makefile
@@ -84,10 +92,10 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 		-prefix $(MAKECONF_PREFIX)/esperanto-sysroot \
 		-disable-shared\
 		-disable-systhreads\
-		-disable-unix-lib\
 		-disable-instrumented-runtime\
 		-disable-ocamltest\
 		-disable-ocamldoc\
+		-disable-debugger\
 		$(MAKECONF_OCAML_CONFIGURE_OPTIONS)
 	echo "ARCH=$(MAKECONF_OCAML_BUILD_ARCH)" >> ocaml/Makefile.config
 	echo 'SAK_CC=cc' >> ocaml/Makefile.config
