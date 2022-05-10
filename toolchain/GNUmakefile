@@ -120,4 +120,3 @@ distclean: clean
 	@echo "DISTCLEAN toolchain"
 	$(RM) Makeconf
 	$(RM) Makeconf.sh
-	$(RM) extract.com
