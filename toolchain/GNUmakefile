@@ -78,7 +78,7 @@ lib/cosmopolitan: $(ARCHIVE) $(LINK) $(OBJECTS) startup.o
 
 $(cosmopolitan_OBJECTS): cosmopolitan.zip extract.com
 	@echo "UNZIP $< for $@"
-	@./extract.com $< dst
+	@$(shell ./extract.com $< dst)
 
 all: $(all_TARGETS)
 
