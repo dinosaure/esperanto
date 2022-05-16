@@ -253,3 +253,17 @@
 
 #endif /* __OCAML_ESPERANTO__ */
 #endif /* CAML_NAME_SPACE */
+
+#ifndef __ESPERANTO_OFF_T__
+#define __ESPERANTO_OFF_T__
+
+/* XXX(dinosaure): [pth] requires [off_t] but recognizes it via `cc -E`.
+ * However [cosmopolitan] defines it with `#define`. The result of `cc -E` is
+ * **without** `off_t`. This trick _undef_ `off_t` and redefine it with
+ * `typedef`. By this way, [pth] is able to recognize the existence of this
+ * type and it does not try to redefine it by itself. */
+
+#undef off_t
+typedef int64_t off_t;
+
+#endif /* __ESPERANTO_OFF_T__ */
