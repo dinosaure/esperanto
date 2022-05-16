@@ -6,6 +6,8 @@ freebsd_task:
     OPAMYES: 1
   env:
     matrix:
+      - OCAML_VERSION: 4.12.1
+      - OCAML_VERSION: 4.13.1
       - OCAML_VERSION: 4.14.0
   pkg_install_script: pkg install -y ocaml-opam binutils gmake bash
   opam_ocaml_cache:
