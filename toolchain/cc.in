@@ -130,6 +130,7 @@ case ${M} in
             "$@" \
             -fuse-ld=bfd -Wl,-T,${L}/ape.lds \
 	    -I ${I} \
+	    -L ${L} \
 	    ${L}/crt.o ${L}/ape.o ${L}/cosmopolitan.a
         ;;
 esac

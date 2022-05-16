@@ -99,4 +99,4 @@ exec @@CONFIG_TARGET_LD@@ \
     ${G} -static -nostdlib \
     @@CONFIG_TARGET_LD_LDFLAGS@@ ${S} ${B} "$@" \
     -fuse-ld=bfd -T ${L}/ape.lds \
-    ${WITH_UNIX} ${S} ${L}/crt.o ${L}/ape.o ${L}cosmopolitan.a
+    ${WITH_UNIX} ${S} -L ${L} ${L}/crt.o ${L}/ape.o ${L}cosmopolitan.a
