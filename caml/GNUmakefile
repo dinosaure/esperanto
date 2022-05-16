@@ -62,7 +62,7 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	cat esperanto_unixsupport.c >> ocaml/otherlibs/unix/unixsupport.c
 	cat esperanto_wait.c >> ocaml/otherlibs/unix/wait.c
 	patch ocaml/otherlibs/unix/gethost.c esperanto_gethost.patch
-	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.patch
+	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.$(MAKECONF_OCAML_VERSION).patch
 	echo -e "ocamlrun:\n\tcp $(shell which ocamlrun) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlrund:\n\tcp $(shell which ocamlrund) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlruni:\n\tcp $(shell which ocamlruni) .\n" >> ocaml/runtime/Makefile
