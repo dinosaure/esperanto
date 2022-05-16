@@ -249,7 +249,15 @@
 
 #define WNOHANG 0
 #define WUNTRACED 0
-#endif
+#endif /* defined(HAS_WAITPID) || defined(HAS_WAIT4) */
+
+#undef SIG_SETMASK
+#undef SIG_BLOCK
+#undef SIG_UNBLOCK
+
+#define SIG_SETMASK 0
+#define SIG_BLOCK 0
+#define SIG_UNBLOCK 0
 
 #endif /* __OCAML_ESPERANTO__ */
 #endif /* CAML_NAME_SPACE */
@@ -267,3 +275,20 @@
 typedef int64_t off_t;
 
 #endif /* __ESPERANTO_OFF_T__ */
+
+#ifndef __ESPERANTO_SIGJMP_BUF__
+#define __ESPERANTO_SIGJMP_BUF__
+
+#ifndef __unused
+#define __unused(x) x __attribute__((unused))
+#endif
+
+typedef jmp_buf sigjmp_buf;
+
+#ifdef CAML_NAME_SPACE
+#define sigsetjmp(env, savesigs) setjmp(env)
+/* XXX(dinosaure): ANY calls of `sigsetjmp` are done with [savesigs = 0] into
+ * OCaml. `sigsetjmp` can have an other behavior ONLY IF [savesigs <> 0]. */
+#endif /* CAML_NAME_SPACE */
+
+#endif /* __ESPERANTO_SIGJMP_BUF__ */

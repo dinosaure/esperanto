@@ -61,6 +61,8 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	cat esperanto_sockopt.c >> ocaml/otherlibs/unix/sockopt.c
 	cat esperanto_unixsupport.c >> ocaml/otherlibs/unix/unixsupport.c
 	cat esperanto_wait.c >> ocaml/otherlibs/unix/wait.c
+	cat esperanto_unix_signals.c >> ocaml/otherlibs/unix/signals.c
+	cat esperanto_systhreads_signals.c >> ocaml/otherlibs/systhreads/st_posix.h
 	patch ocaml/otherlibs/unix/gethost.c esperanto_gethost.patch
 	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.$(MAKECONF_OCAML_VERSION).patch
 	echo -e "ocamlrun:\n\tcp $(shell which ocamlrun) .\n" >> ocaml/runtime/Makefile
@@ -91,7 +93,6 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 		-host=$(MAKECONF_BUILD_ARCH)-unknown-none \
 		-prefix $(MAKECONF_PREFIX)/esperanto-sysroot \
 		-disable-shared\
-		-disable-systhreads\
 		-disable-instrumented-runtime\
 		-disable-ocamltest\
 		-disable-ocamldoc\

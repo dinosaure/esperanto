@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
   _esperanto_init_sys_open_flags(open_flags);
   _esperanto_init_posix_signals(posix_signals);
   _esperanto_init_unix();
+  _esperanto_init_systhreads();
 
   caml_startup(
       argv); // TODO(dinosaure): check if [argv] terminates with [NULL].

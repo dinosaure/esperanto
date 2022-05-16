@@ -18,6 +18,7 @@ extern void _esperanto_init_sockopt_timeval(const struct socket_option[]);
 extern void _esperanto_init_sockopt_unix_error(const struct socket_option[]);
 extern void _esperanto_init_error(const int[]);
 extern void _esperanto_init_wait_flag(const int[]);
+extern void _esperanto_init_unix_signals(const int[]);
 
 void _esperanto_init_unix() {
   int access_permission_table[] = {
@@ -94,6 +95,7 @@ void _esperanto_init_unix() {
       ELOOP,           EOVERFLOW /*, EUNKNOWNERR */
   };
   int wait_flag_table[] = {WNOHANG, WUNTRACED};
+  int sigprocmask_cmd[3] = {SIG_SETMASK, SIG_BLOCK, SIG_UNBLOCK};
 
   _esperanto_init_permission(access_permission_table);
   _esperanto_init_open_flag(open_flag_table);
@@ -105,6 +107,9 @@ void _esperanto_init_unix() {
   _esperanto_init_sockopt_unix_error(sockopt_unix_error);
   _esperanto_init_error(error_table);
   _esperanto_init_wait_flag(wait_flag_table);
+  // #ifdef POSIX_SIGNALS
+  _esperanto_init_unix_signals(sigprocmask_cmd);
+  // #endif
 }
 
 #pragma GCC pop

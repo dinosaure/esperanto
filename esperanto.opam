@@ -14,6 +14,7 @@ install: ["sh" "-c" "cd caml ; %{make}% install" ]
 depends: [
   "ocaml-src" {build}
   "cosmopolitan" {build}
+  "cosmopolitan-pth" {build}
   "ocaml" {>= "4.12.0" & < "4.15.0"}
 ]
 synopsis: "An OCaml compiler with Cosmopolitan"
