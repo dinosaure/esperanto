@@ -452,10 +452,6 @@ typedef int64_t off_t;
 
 #endif /* __ESPERANTO_OFF_T__ */
 
-#ifdef CAML_NAME_SPACE
-#define pthread_mutexattr_setttype(attr, type) 0
-#endif /* CAML_NAME_SPACE */
-
 #ifndef __ESPERANTO_SIGJMP_BUF__
 #define __ESPERANTO_SIGJMP_BUF__
 
