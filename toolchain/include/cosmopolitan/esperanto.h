@@ -249,7 +249,335 @@
 
 #define WNOHANG 0
 #define WUNTRACED 0
-#endif
+#endif /* defined(HAS_WAITPID) || defined(HAS_WAIT4) */
+
+#undef SIG_SETMASK
+#undef SIG_BLOCK
+#undef SIG_UNBLOCK
+
+#define SIG_SETMASK 0
+#define SIG_BLOCK 0
+#define SIG_UNBLOCK 0
+
+#undef IGNBRK
+#undef BRKINT
+#undef IGNPAR
+#undef PARMRK
+#undef INPCK
+#undef ISTRIP
+#undef INLCR
+#undef IGNCR
+#undef ICRNL
+#undef IXON
+#undef IXOFF
+#undef OPOST
+#undef CSIZE
+#undef CS5
+#undef CS6
+#undef CS7
+#undef CS8
+#undef CSTOPB
+#undef CREAD
+#undef PARENB
+#undef PARODD
+#undef HUPCL
+#undef CLOCAL
+#undef ISIG
+#undef ICANON
+#undef NOFLSH
+#undef ECHO
+#undef ECHOE
+#undef ECHOK
+#undef ECHONL
+#undef VINTR
+#undef VQUIT
+#undef VERASE
+#undef VKILL
+#undef VEOF
+#undef VEOL
+#undef VMIN
+#undef VTIME
+#undef VSTART
+#undef VSTOP
+
+#define IGNBRK 0
+#define BRKINT 0
+#define IGNPAR 0
+#define PARMRK 0
+#define INPCK 0
+#define ISTRIP 0
+#define INLCR 0
+#define IGNCR 0
+#define ICRNL 0
+#define IXON 0
+#define IXOFF 0
+#define OPOST 0
+#define CSIZE 0
+#define CS5 0
+#define CS6 0
+#define CS7 0
+#define CS8 0
+#define CSTOPB 0
+#define CREAD 0
+#define PARENB 0
+#define PARODD 0
+#define HUPCL 0
+#define CLOCAL 0
+#define ISIG 0
+#define ICANON 0
+#define NOFLSH 0
+#define ECHO 0
+#define ECHOE 0
+#define ECHOK 0
+#define ECHONL 0
+#define VINTR 0
+#define VQUIT 0
+#define VERASE 0
+#define VKILL 0
+#define VEOF 0
+#define VEOL 0
+#define VMIN 0
+#define VTIME 0
+#define VSTART 0
+#define VSTOP 0
+
+#undef B0
+#undef B50
+#undef B75
+#undef B110
+#undef B134
+#undef B150
+#undef B200
+#undef B300
+#undef B600
+#undef B1200
+#undef B1800
+#undef B2400
+#undef B4800
+#undef B9600
+#undef B19200
+#undef B38400
+#undef B57600
+#undef B115200
+#undef B230400
+#undef B460800
+#undef B500000
+#undef B576000
+#undef B921600
+#undef B1000000
+#undef B1152000
+#undef B1500000
+#undef B2000000
+#undef B2500000
+#undef B3000000
+#undef B3500000
+#undef B4000000
+#undef B7200
+#undef B14400
+#undef B28800
+#undef B76800
+#undef B128000
+#undef B256000
+
+#define B0 0
+#define B50 0
+#define B75 0
+#define B110 0
+#define B134 0
+#define B150 0
+#define B200 0
+#define B300 0
+#define B600 0
+#define B1200 0
+#define B1800 0
+#define B2400 0
+#define B4800 0
+#define B9600 0
+#define B19200 0
+#define B38400 0
+#define B57600 0
+#define B115200 0
+#define B230400 0
+#define B460800 0
+#define B500000 0
+#define B576000 0
+#define B921600 0
+#define B1000000 0
+#define B1152000 0
+#define B1500000 0
+#define B2000000 0
+#define B2500000 0
+#define B3000000 0
+#define B3500000 0
+#define B4000000 0
+#define B7200 0
+#define B14400 0
+#define B28800 0
+#define B76800 0
+#define B128000 0
+#define B256000 0
+
+#undef TCOOFF
+#undef TCOON
+#undef TCIOFF
+#undef TCION
+
+#define TCOOFF 0
+#define TCOON 0
+#define TCIOFF 0
+#define TCION 0
+
+#undef TCIFLUSH
+#undef TCOFLUSH
+#undef TCIOFLUSH
+
+#define TCIFLUSH 0
+#define TCOFLUSH 0
+#define TCIOFLUSH 0
+
+/* XXX(dinosaure): when we want to run lwt code, we must
+ * re-inject few functions with [pth] equivalent functions.
+ * At the beginning so, we redefine them and the toolchain
+ * will inject them depending on [WITH_THREAD] value.
+ * - if it sets, we use Cosmopolitan's functions
+ * - otherwise, we expect [pth] equivalent functions
+ */
+#define fork       __esperanto_fork
+#define sleep      __esperanto_sleep
+#define nanosleep  __esperanto_nanosleep
+#define usleep     __esperanto_usleep
+#define system     __esperanto_system
+#define sigwait    __esperanto_sigwait
+#define waitpid    __esperanto_waitpid
+#define connect    __esperanto_connect
+#define accept     __esperanto_accept
+#define select     __esperanto_select
+#define poll       __esperanto_poll
+#define read       __esperanto_read
+#define write      __esperanto_write
+#define readv      __esperanto_readv
+#define writev     __esperanto_writev
+#define recv       __esperanto_recv
+#define send       __esperanto_send
+#define recvfrom   __esperanto_recvfrom
+#define sendto     __esperanto_sendto
+#define pread      __esperanto_pread
+#define pwrite     __esperanto_pwrite
 
 #endif /* __OCAML_ESPERANTO__ */
 #endif /* CAML_NAME_SPACE */
+
+#ifndef __ESPERANTO_OFF_T__
+#define __ESPERANTO_OFF_T__
+
+/* XXX(dinosaure): [pth] requires [off_t] but recognizes it via `cc -E`.
+ * However [cosmopolitan] defines it with `#define`. The result of `cc -E` is
+ * **without** `off_t`. This trick _undef_ `off_t` and redefine it with
+ * `typedef`. By this way, [pth] is able to recognize the existence of this
+ * type and it does not try to redefine it by itself. */
+
+#undef off_t
+typedef int64_t off_t;
+
+#endif /* __ESPERANTO_OFF_T__ */
+
+#ifndef __ESPERANTO_SIGJMP_BUF__
+#define __ESPERANTO_SIGJMP_BUF__
+
+#ifndef __unused
+#define __unused(x) x __attribute__((unused))
+#endif /* __unused */
+
+typedef jmp_buf sigjmp_buf;
+#define siglongjmp(env, val) longjmp(env, val)
+
+#ifdef CAML_NAME_SPACE
+#define sigsetjmp(env, savesigs) setjmp(env)
+/* XXX(dinosaure): ANY calls of `sigsetjmp` are done with [savesigs = 0] into
+ * OCaml. `sigsetjmp` can have an other behavior ONLY IF [savesigs <> 0]. */
+/* XXX(dinosaure): [pth] does not implement this function and return an error. */
+#endif /* CAML_NAME_SPACE */
+
+#endif /* __ESPERANTO_SIGJMP_BUF__ */
+
+#ifndef SOMAXCONN
+#define SOMAXCONN 40
+#endif /* SOMAXCONN */
+
+#ifndef __ESPERANTO_SCHED__
+#define __ESPERANTO_SCHED__
+
+/*
+ * musl as a whole is licensed under the following standard MIT license:
+ * 
+ * ----------------------------------------------------------------------
+ * Copyright © 2005-2020 Rich Felker, et al.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * ----------------------------------------------------------------------
+ */
+
+#define __CPU_op_S(i, size, set, op) ( (i)/8U >= (size) ? 0 : \
+	(((unsigned long *)(set))[(i)/8/sizeof(long)] op (1UL<<((i)%(8*sizeof(long))))) )
+
+#define CPU_SET_S(i, size, set) __CPU_op_S(i, size, set, |=)
+#define CPU_CLR_S(i, size, set) __CPU_op_S(i, size, set, &=~)
+#define CPU_ISSET_S(i, size, set) __CPU_op_S(i, size, set, &)
+
+#define __CPU_op_func_S(func, op) \
+static __inline void __CPU_##func##_S(size_t __size, cpu_set_t *__dest, \
+	const cpu_set_t *__src1, const cpu_set_t *__src2) \
+{ \
+	size_t __i; \
+	for (__i=0; __i<__size/sizeof(long); __i++) \
+		((unsigned long *)__dest)[__i] = ((unsigned long *)__src1)[__i] \
+			op ((unsigned long *)__src2)[__i] ; \
+}
+
+__CPU_op_func_S(AND, &)
+__CPU_op_func_S(OR, |)
+__CPU_op_func_S(XOR, ^)
+
+#define CPU_AND_S(a,b,c,d) __CPU_AND_S(a,b,c,d)
+#define CPU_OR_S(a,b,c,d) __CPU_OR_S(a,b,c,d)
+#define CPU_XOR_S(a,b,c,d) __CPU_XOR_S(a,b,c,d)
+
+#define CPU_COUNT_S(size,set) __sched_cpucount(size,set)
+#define CPU_ZERO_S(size,set) memset(set,0,size)
+#define CPU_EQUAL_S(size,set1,set2) (!memcmp(set1,set2,size))
+
+#define CPU_ALLOC_SIZE(n) (sizeof(long) * ( (n)/(8*sizeof(long)) \
+	+ ((n)%(8*sizeof(long)) + 8*sizeof(long)-1)/(8*sizeof(long)) ) )
+#define CPU_ALLOC(n) ((cpu_set_t *)calloc(1,CPU_ALLOC_SIZE(n)))
+#define CPU_FREE(set) free(set)
+
+#define CPU_SETSIZE 128
+
+#define CPU_SET(i, set) CPU_SET_S(i,sizeof(cpu_set_t),set)
+#define CPU_CLR(i, set) CPU_CLR_S(i,sizeof(cpu_set_t),set)
+#define CPU_ISSET(i, set) CPU_ISSET_S(i,sizeof(cpu_set_t),set)
+#define CPU_AND(d,s1,s2) CPU_AND_S(sizeof(cpu_set_t),d,s1,s2)
+#define CPU_OR(d,s1,s2) CPU_OR_S(sizeof(cpu_set_t),d,s1,s2)
+#define CPU_XOR(d,s1,s2) CPU_XOR_S(sizeof(cpu_set_t),d,s1,s2)
+#define CPU_COUNT(set) CPU_COUNT_S(sizeof(cpu_set_t),set)
+#define CPU_ZERO(set) CPU_ZERO_S(sizeof(cpu_set_t),set)
+#define CPU_EQUAL(s1,s2) CPU_EQUAL_S(sizeof(cpu_set_t),s1,s2)
+
+#endif /* __ESPERANTO_SCHED__ */

@@ -59,7 +59,7 @@ done
 
 [ -z "${CONFIG_TARGET}" ] && die "The --target option needs to be specified."
 
-MAKECONF_CFLAGS=""
+MAKECONF_CFLAGS="-D__STRICT_ANSI__"
 MAKECONF_CC="$CONFIG_TARGET-cc"
 MAKECONF_LD="$CONFIG_TARGET-ld"
 MAKECONF_AS="$MAKECONF_CC -c"

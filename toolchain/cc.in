@@ -63,6 +63,7 @@ S=
 G=
 A=
 WITH_UNIX=
+WITH_THREADS=
 for arg do
     shift
     if [ -n "${Z}" ]; then
@@ -100,9 +101,15 @@ for arg do
 
     [ "${arg##*.}" = "s" ] && A=set
     [ "${arg}" = "-lunix" ] && WITH_UNIX=set
+    [ "${arg}" = "-lthreads" -o "${arg}" = "-lthreadsnat" ] && WITH_THREADS=set
+    # XXX(dinosaure): currently, [threadsnat] seems the more
+    # accurate but I'm not sure - but nobody cares...
 
     set -- "$@" "$arg"
 done
+
+DRIVER="cosmopolitan_syscalls.o"
+
 case ${M} in
     compile)
         [ -n "${B}" ] && B="-DSUPPORT_VECTOR=${B}"
@@ -121,15 +128,22 @@ case ${M} in
         [ -n "${S}" ] && S="${L}/startup.o"
         [ -n "${__V}" ] && set -x
 	[ -z "${G}" -a -z "${A}" ] && G="-g" || G=
-	[ -n "${WITH_UNIX}" ]  && WITH_UNIX="${L}/startup_unix.o" || WITH_UNIX="${L}/fake_unix.o"
+	[ -n "${WITH_UNIX}" ]  \
+	  && WITH_UNIX="${L}/startup_unix.o" \
+	  || WITH_UNIX="${L}/fake_unix.o"
+	[ -n "${WITH_THREADS}" ] && DRIVER="pth_syscalls.o"
+	[ -n "${WITH_THREADS}" ] \
+          && WITH_THREADS="${L}/startup_threads.o" \
+          || WITH_THREADS="${L}/fake_threads.o"
         exec @@CONFIG_TARGET_CC@@ \
             @@CONFIG_TARGET_CC_CFLAGS@@ \
 	    ${G} -Os -static -nostdlib -nostdinc \
 	    -fno-pie -no-pie -mno-red-zone -fno-omit-frame-pointer -pg \
-            @@CONFIG_TARGET_CC_LDFLAGS@@ ${WITH_UNIX} ${S} ${B} \
+            @@CONFIG_TARGET_CC_LDFLAGS@@ ${WITH_UNIX} ${WITH_THREADS} ${S} ${B} \
             "$@" \
             -fuse-ld=bfd -Wl,-T,${L}/ape.lds \
 	    -I ${I} \
-	    ${L}/crt.o ${L}/ape.o ${L}/cosmopolitan.a
+	    -L ${L} \
+	    ${L}/${DRIVER} ${L}/crt.o ${L}/ape.o ${L}/cosmopolitan.a
         ;;
 esac
