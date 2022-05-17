@@ -435,6 +435,35 @@
 #define TCOFLUSH 0
 #define TCIOFLUSH 0
 
+/* XXX(dinosaure): when we want to run lwt code, we must
+ * re-inject few functions with [pth] equivalent functions.
+ * At the beginning so, we redefine them and the toolchain
+ * will inject them depending on [WITH_THREAD] value.
+ * - if it sets, we use Cosmopolitan's functions
+ * - otherwise, we expect [pth] equivalent functions
+ */
+#define fork       __esperanto_fork
+#define sleep      __esperanto_sleep
+#define nanosleep  __esperanto_nanosleep
+#define usleep     __esperanto_usleep
+#define system     __esperanto_system
+#define sigwait    __esperanto_sigwait
+#define waitpid    __esperanto_waitpid
+#define connect    __esperanto_connect
+#define accept     __esperanto_accept
+#define select     __esperanto_select
+#define poll       __esperanto_poll
+#define read       __esperanto_read
+#define write      __esperanto_write
+#define readv      __esperanto_readv
+#define writev     __esperanto_writev
+#define recv       __esperanto_recv
+#define send       __esperanto_send
+#define recvfrom   __esperanto_recvfrom
+#define sendto     __esperanto_sendto
+#define pread      __esperanto_pread
+#define pwrite     __esperanto_pwrite
+
 #endif /* __OCAML_ESPERANTO__ */
 #endif /* CAML_NAME_SPACE */
 

@@ -89,17 +89,26 @@ for arg do
 
     [ "${arg##*.}" = "s" ] && A=set
     [ "${arg}" = "-lunix" ] && WITH_UNIX=set
-    [ "${arg}" = "-lthreads" ] && WITH_THREADS=set
+    [ "${arg}" = "-lthreads" -o "${arg}" = "-lthreadsnat" ] && WITH_THREADS=set
 
     set -- "$@" "$arg"
 done
+
+DRIVER=cosmopolitan_syscalls.o
+
 [ -n "${B}" ] && B="-DSUPPORT_VECTOR=${B}"
 [ -n "${S}" ] && S="${L}/startup.o"
 [ -z "${G}" -a -z "${A}" ] && G="-g" || G=
-[ -n "${WITH_UNIX}" ]  && WITH_UNIX="${L}/startup_unix.o" || WITH_UNIX="${L}/fake_unix.o"
-[ -n "${WITH_THREADS}" ] && WITH_THREADS="${L}/startup_threads.o" || WITH_THREADS="${L}/fake_threads.o"
+[ -n "${WITH_UNIX}" ]  \
+  && WITH_UNIX="${L}/startup_unix.o" \
+  || WITH_UNIX="${L}/fake_unix.o"
+[ -n "${WITH_THREADS}" ] && DRIVER="pth_syscalls.o"
+[ -n "${WITH_THREADS}" ] \
+  && WITH_THREADS="${L}/startup_threads.o" \
+  || WITH_THREADS="${L}/fake_threads.o"
 exec @@CONFIG_TARGET_LD@@ \
     ${G} -static -nostdlib \
     @@CONFIG_TARGET_LD_LDFLAGS@@ ${S} ${B} "$@" \
     -fuse-ld=bfd -T ${L}/ape.lds \
-    ${WITH_UNIX} ${WITH_THREADS} ${S} -L ${L} ${L}/crt.o ${L}/ape.o ${L}cosmopolitan.a
+    ${WITH_UNIX} ${WITH_THREADS} ${S} -L ${L} \
+    ${L}/${DRIVER} ${L}/crt.o ${L}/ape.o ${L}cosmopolitan.a
