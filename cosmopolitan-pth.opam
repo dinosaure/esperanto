@@ -13,7 +13,6 @@ build: [
 		        --disable-shared \
 			--enable-pthread \
 			--enable-syscall-soft \
-			--enable-syscall-hard \
 			--with-gnu-ld \
 			--host=x86_64-esperanto-none \
                         --prefix=%{prefix}% \
