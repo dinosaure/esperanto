@@ -65,6 +65,10 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	cat esperanto_systhreads_signals.c >> ocaml/otherlibs/systhreads/st_posix.h
 	patch ocaml/otherlibs/unix/gethost.c esperanto_gethost.patch
 	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.$(MAKECONF_OCAML_VERSION).patch
+# We must comment [alloc], [callback] and [flush] which are `#define` by Cosmopolitan
+	sed -i -e '/ alloc /s/^/\/\//' ocaml/runtime/caml/compatibility.h
+	sed -i -e '/ callback /s/^/\/\//' ocaml/runtime/caml/compatibility.h
+	sed -i -e '/ flush /s/^/\/\//' ocaml/runtime/caml/compatibility.h
 	echo -e "ocamlrun:\n\tcp $(shell which ocamlrun) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlrund:\n\tcp $(shell which ocamlrund) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlruni:\n\tcp $(shell which ocamlruni) .\n" >> ocaml/runtime/Makefile
