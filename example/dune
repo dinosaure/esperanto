@@ -1,7 +1,6 @@
 (executable
  (enabled_if
   (= %{context_name} esperanto))
- (link_flags :standard -cclib "-z caml-startup")
  (name cat))
 
 (rule
