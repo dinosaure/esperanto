@@ -9,7 +9,7 @@ TOP=$(abspath .)
 # CFLAGS used to build ocaml runtime
 LOCAL_CFLAGS=$(MAKECONF_CFLAGS)
 # CFLAGS used by the OCaml compiler to build C stubs
-GLOBAL_CFLAGS=$(MAKECONF_CFLAGS)
+GLOBAL_CFLAGS=""
 # LIBS used by the OCaml compiler to link executables
 GLOBAL_LIBS=$(MAKECONF_EXTRA_LIBS)
 

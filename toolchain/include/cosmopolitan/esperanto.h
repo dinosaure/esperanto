@@ -442,6 +442,27 @@
  * - if it sets, we use Cosmopolitan's functions
  * - otherwise, we expect [pth] equivalent functions
  */
+extern pid_t   __esperanto_fork(void);
+extern int     __esperanto_nanosleep(const struct timespec *, struct timespec *);
+extern int     __esperanto_usleep(unsigned int);
+extern int     __esperanto_system(const char *);
+extern int     __esperanto_sigwait(const sigset_t *, int *);
+extern int     __esperanto_waitpid(pid_t, int *, int);
+extern int     __esperanto_connect(int, struct sockaddr *, socklen_t);
+extern int     __esperanto_accept(int, struct sockaddr *, socklen_t);
+extern int     __esperanto_select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
+extern int     __esperanto_poll(struct pollfd *, nfds_t, int);
+extern ssize_t __esperanto_read(int, void *, size_t);
+extern ssize_t __esperanto_write(int, void *, size_t);
+extern ssize_t __esperanto_readv(int, const struct iovec *, int);
+extern ssize_t __esperanto_writev(int, const struct iovec *, int);
+extern ssize_t __esperanto_recv(int, void *, size_t, int);
+extern ssize_t __esperanto_send(int, const void *, size_t, int);
+extern ssize_t __esperanto_recvfrom(int, void *, size_t, int, struct sockaddr *, socklen_t *);
+extern ssize_t __esperanto_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
+extern ssize_t __esperanto_pread(int, void *, size_t, off_t);
+extern ssize_t __esperanto_pwrite(int, const void *, size_t, off_t);
+
 #define fork       __esperanto_fork
 #define sleep      __esperanto_sleep
 #define nanosleep  __esperanto_nanosleep
