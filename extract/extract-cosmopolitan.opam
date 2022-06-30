@@ -25,7 +25,3 @@ depends: [
   "digestif"
   "bigstringaf"
 ]
-
-pin-depends: [
-  [ "checkseum.dev" "git+https://github.com/mirage/checkseum.git#esperanto" ]
-]
