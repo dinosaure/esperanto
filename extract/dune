@@ -1,6 +1,5 @@
 (executable
  (name extract)
- (link_flags :standard -cclib "-z caml-startup")
  (libraries decompress.de bigstringaf fmt digestif))
 
 (rule
