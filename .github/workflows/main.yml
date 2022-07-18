@@ -5,7 +5,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
-        ocaml-version: ["4.12.1", "4.13.1", "4.14.0"]
+        ocaml-version: ["4.13.1", "4.14.0"]
     runs-on: ${{ matrix.operating-system }}
     steps:
     - uses: actions/checkout@v2
