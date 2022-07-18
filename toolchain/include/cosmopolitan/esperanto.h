@@ -3,6 +3,7 @@
 #define __OCAML_ESPERANTO__
 
 #pragma GCC diagnostic ignored "-Wredundant-decls"
+#pragma GCC diagnostic ignored "-Wpedantic"
 
 #undef SIGUSR1
 #undef SIGUSR2
