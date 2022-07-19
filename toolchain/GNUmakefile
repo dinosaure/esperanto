@@ -101,6 +101,11 @@ install: all
 	$(INSTALL) -m 0755 bin/$(CONFIG_TARGET_TRIPLE)-objcopy $(DESTINATION)/bin
 	@mkdir -p $(TOOLCHAIN_LIBDIR) $(TOOLCHAIN_INCDIR) $(TOOLCHAIN_SYSDIR) \
 		$(TOOLCHAIN_ARPADIR) $(TOOLCHAIN_NETINETDIR)
+	@if [  "$(CONFIG_TARGET_ARCH)" = "x86_64" \
+	    -o "$(CONFIG_TARGET_ARCH)" = "i386" ]; then \
+		$(INSTALL) -m 0644 include/x86/x86intrin.h \
+		"$(TOOLCHAIN_INCDIR)/x86intrin.h" ; \
+	fi
 	cd lib/cosmopolitan && \
 		find . -type f -exec $(INSTALL) -m 0644 \
 		"{}" "$(TOOLCHAIN_LIBDIR)/{}" \;
