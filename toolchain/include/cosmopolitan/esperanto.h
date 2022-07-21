@@ -3,7 +3,6 @@
 #define __OCAML_ESPERANTO__
 
 #pragma GCC diagnostic ignored "-Wredundant-decls"
-#pragma GCC diagnostic ignored "-Wpedantic"
 
 #undef SIGUSR1
 #undef SIGUSR2
@@ -488,6 +487,17 @@ extern ssize_t __esperanto_pwrite(int, const void *, size_t, off_t);
 
 #endif /* __OCAML_ESPERANTO__ */
 #endif /* CAML_NAME_SPACE */
+
+// XXX(dinosaure): for [mirage-crypto]
+#pragma GCC diagnostic ignored "-Wpedantic"
+// XXX(dinosaure): for [ocaml-gmp]
+// Some warnings are promoted as errors due to Cosmopolitan's pragma
+// The existence of [FILE*] is checked by the definition of [__DEFINED_FILE]
+// as musl does.
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wredundant-decls"
+#define __DEFINED_FILE
 
 #ifndef __ESPERANTO_OFF_T__
 #define __ESPERANTO_OFF_T__
