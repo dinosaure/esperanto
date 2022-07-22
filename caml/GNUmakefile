@@ -75,6 +75,12 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	echo -e "ocamlrund:\n\tcp $(shell which ocamlrund) .\n" >> ocaml/runtime/Makefile
 	echo -e "ocamlruni:\n\tcp $(shell which ocamlruni) .\n" >> ocaml/runtime/Makefile
 	touch ocaml/runtime/libcamlrun.a ocaml/runtime/libcamlrund.a ocaml/runtime/libcamlruni.a
+# Comment a CAML_STATIC_ASSERT which emits warnings ("variably modified 'static_assertion_failure_line_XX'")
+	@if [ "$(MAKECONF_OCAML_VERSION)" = "4.14.0" ] ; then \
+	  sed -i -e "56,58 s/^/\/\//" ocaml/runtime/caml/domain_state.h; \
+	else \
+	  sed -i -e "48,50 s/^/\/\//" ocaml/runtime/caml/domain_state.h; \
+	fi
 # yacc/Makefile: import ocamlyacc from the system
 	sed -i -e 's/^ocamlyacc$$(EXE):.*/dummy:/g' ocaml/yacc/Makefile
 	echo -e "ocamlyacc:\n\tcp $(shell which ocamlyacc) .\n" >> ocaml/yacc/Makefile
