@@ -489,7 +489,10 @@ extern ssize_t __esperanto_pwrite(int, const void *, size_t, off_t);
 #endif /* CAML_NAME_SPACE */
 
 // XXX(dinosaure): for [mirage-crypto]
+// We must inhibit acceleration instr. when we try to compile mirage-crypto
+// with Cosmopolitan.
 #pragma GCC diagnostic ignored "-Wpedantic"
+#define __MIRAGE_CRYPTO_NO_ACCELERATE__
 // XXX(dinosaure): for [ocaml-gmp]
 // Some warnings are promoted as errors due to Cosmopolitan's pragma
 // The existence of [FILE*] is checked by the definition of [__DEFINED_FILE]
