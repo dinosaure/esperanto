@@ -117,8 +117,9 @@ case ${M} in
 	[ -z "${G}" -a -z "${A}" ] && G="-g" || G=
         exec @@CONFIG_TARGET_CC@@ \
             @@CONFIG_TARGET_CC_CFLAGS@@ \
-	    ${G} -Os -nostdlib -nostdinc \
-	    -fno-pie -no-pie -mno-red-zone -fno-omit-frame-pointer \
+	    ${G} -O \
+	    -fno-pie -no-pie -mno-red-zone \
+            -nostdlib -nostdinc -fno-omit-frame-pointer -mno-tls-direct-seg-refs \
 	    -I ${I} \
 	    ${B} \
 	    "$@"
@@ -137,10 +138,12 @@ case ${M} in
           || WITH_THREADS="${L}/fake_threads.o"
         exec @@CONFIG_TARGET_CC@@ \
             @@CONFIG_TARGET_CC_CFLAGS@@ \
-	    ${G} -Os -static -nostdlib -nostdinc \
-	    -fno-pie -no-pie -mno-red-zone -fno-omit-frame-pointer \
+	    ${G} -O -static \
+	    -fno-pie -no-pie -mno-red-zone \
+            -nostdlib -nostdinc -fno-omit-frame-pointer -mno-tls-direct-seg-refs \
             @@CONFIG_TARGET_CC_LDFLAGS@@ ${WITH_UNIX} ${WITH_THREADS} ${S} ${B} \
             "$@" \
+	    -Wl,--gc-sections \
             -fuse-ld=bfd -Wl,-T,${L}/ape.lds \
 	    -I ${I} \
 	    -L ${L} \

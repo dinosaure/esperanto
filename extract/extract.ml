@@ -4,9 +4,9 @@ let ( / ) = Filename.concat
 
 let expected =
   [ "dst/cosmopolitan.h",
-    (Digest.of_hex "ba55ae9b3795b66998b5587ed358abdc8da8cb1ea20164ad7b55d66c552dba0c")
+    (Digest.of_hex "3a466c0f581023334a2895e4c2838fa46b97be32b5009fc3844d2be81d94d814")
   ; "dst/ape.lds",
-    (Digest.of_hex "63d6f89cf4cdf4aa8068c5db6475a4e2da4824470944957f214f7cf3d0f6878f")
+    (Digest.of_hex "394e4c0f73ec34fc7d87c91b7f11943e0f4094a78ff1412c25bbf3cb7c8e02de")
   ; "dst/crt.o",
     (Digest.of_hex "45b97b158e1e234fce927379c2ffa64e45bb84ea894ec6c64e1e17f9da515691")
   ; "dst/ape.o",
@@ -14,7 +14,7 @@ let expected =
   ; "dst/ape-no-modify-self.o",
     (Digest.of_hex "fb262ad511b7bcf25e32e40a92bf0967d491fe8cfbe57e2b9178a33402224477")
   ; "dst/cosmopolitan.a",
-    (Digest.of_hex "136047470d91b235c5d6204d2938f2da6219504e9bf636a6ef4debd67895744c") ]
+    (Digest.of_hex "2d8d082c7441db1e3fa140b005a3f3c57520b45a202aaf8b2d3cb6d9d42313c6") ]
 
 let digest filename =
   let tmp = Bytes.create 0x1000 in
