@@ -8,7 +8,6 @@ produce a **native** executable which requires few libraries:
 - a standard C library
 - `libasmrun.a` (the _caml-runtime_)
 - probably `libunix.a` if you depend on `unix.cmxa`
-- probably `libpthread.a` if you depend on `threads.cmxa`
 
 Esperanto replaces the host's C library by [Cosmopolitan][cosmopolitan]. Then,
 it outputs a POSIX-approved polyglot format that runs on many platforms. For
@@ -21,9 +20,25 @@ You can install the project with OPAM:
 $ opam pin add -y https://github.com/dinosaure/esperanto.git
 ```
 
-Then, you can take your favorite project and compile executables with the
-Esperanto toolchain. You need to specify a new option `-z caml-startup`
-and you need to specify a new `dune-workspace`:
+### A simple program
+
+Let's start to make a simple _Hello World!_ example:
+```sh
+$ cat >main.ml <<EOF
+let () = print_endline "Hello World!"
+EOF
+$ ocamlfind -toolchain esperanto opt main.ml
+$ objcopy -S -O binary a.out
+$ file a.out
+a.out: DOS/MBR boot sector
+$ sh -c "./a.out"
+Hello World!
+```
+
+### With `dune` and dependencies
+
+You can take your favorite project and compile executables with the
+Esperanto toolchain. You need to specify a new `dune-workspace`:
 ```sh
 $ git clone https://github.com/dinosaure/hxd.git
 $ cd hxd
@@ -61,11 +76,19 @@ $ dune build bin/xxd.com
 $ ls bin/xxd.com
 ```
 
-Now, you have a portable program. Please note that your APE binary
-**will assimilate** itself as a conventional resident of your platform after
-**the first run**, so it can be fast and efficient for subsequent executions -
-but it becomes **not** portable anymore! So if you intend to copy the binary to
-Windows or Mac then please do that **before** you run it, not after.
+Now, you have a portable/polyglot program. The user can _assimilate_ the
+program with the `--assimilate` option:
+```sh
+$ file bin/xxd.com
+bin/xxd.com: DOS/MBR boot sector
+$ sh -c "./bin/xxd.com --assimilate"
+$ file bin/xxd.com
+bin/xxd.com: ELF 64-bit LSB executable
+```
+
+The `--assimilate` option modify the executable itself to become _really_
+native to your platform - in other words, the executable no longer becomes
+polyglot!
 
 ## The toolchain
 
@@ -85,8 +108,6 @@ It installs few objects files:
   must be linked with `-z caml-startup` option
 - `startup_unix.o`/`fake_unix.o` which initiates few constants needed by
   `libunix.a` if you depend on `unix.cmxa`
-- `startup_threads.o`/`fake_threads.o` which initiates few constants needed by
-  `libthreads.a` if you depend on `threads.cmxa`
 
 ## The caml compiler
 
@@ -94,19 +115,51 @@ From the toolchain, we are able to compile the OCaml compiler and its runtime
 with Cosmopolitan (with few fixes). `esperanto` provides a new OCaml toolchain
 which can be used by `dune` to "cross"-compile a project.
 
-Such design comes from [MirageOS][mirage] and [Solo5][solo5].
+Such design comes from [MirageOS][mirage] and [Solo5][solo5]. For C stubs, we
+provide the `__ESPERANTO__` definition which permits to orchestrate your
+compilation of C files according to the OCaml toolchain.
 
-Currently, we support OCaml 4.12, 4.13 & 4.14.
+Currently, we support OCaml 4.13 & 4.14.
 
 ## Issues and bugs
 
+### `zsh` and `binfmt_misc`
+
+Currently, `zsh < 5.9.0` does not support well Cosmopolitan/APE binaries.
+However, the recent version fix the initial issue. In the case of you have
+`zsh < 5.9.0`, you can use the `--assimilate` option to modify the executable
+to a _real_ native application:
+```sh
+$ zsh --version
+zsh 5.8.1
+$ zsh
+$ ./a.out
+zsh: exec format error: ./a.out
+$ sh -c "./a.out --assimilate"
+$ ./a.out
+Hello World!
+```
+
+However, as explained above, the binary no longer becomes _polyglot_!
+
+An other issue on Linux is about `binfmt_misc` which wants to interpret the
+binary as a Windows executable (due to the header of the Cosmopolitan binary).
+A good explanation is available here: jart/cosmopolitan#2
+
+The Cosmopolitan distribution (and specially the APE distribution) gives an
+installer: https://justine.lol/apeloader/#binfmt_misc
+This installer learns to `binfmt_misc` how to recognize and execute a
+Cosmopolitan binary.
+
 ### `pthread` and platforms
 
-Currently, we use [`pth`][pth] to provide from few POSIX-available _syscalls_
-the `pthread` library required by `threads.cmxa`. However, the support of `pth`
-is only about POSIX systems. The Windows support is not done yet so. An issue
-exists to track such support. For other systems like \*BSD, the support should
-works.
+Cosmopolitan provides partially `pthread` (only mutex) and few functions which
+can simulate threads (see `spawn` and `join`). Due to the partial
+implementation of the `pthread`, we are not able to provide `threads.cmxa` from
+the OCaml project. However, _upstream_ wants to improve this situation and, in
+the near future, Cosmopolitan will probably provide a full implementation of
+`pthread`. In this future, we will be able to provide `threads.cmxa` and start
+the support of OCaml 5.0.
 
 ### Warnings and C stubs
 
