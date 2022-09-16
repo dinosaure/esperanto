@@ -121,6 +121,8 @@ case ${M} in
 	    -fno-pie -no-pie -mno-red-zone \
             -nostdlib -nostdinc -fno-omit-frame-pointer -mno-tls-direct-seg-refs \
 	    -I ${I} \
+	    -include cosmopolitan.h \
+	    -include esperanto.h \
 	    ${B} \
 	    "$@"
         ;;
@@ -146,6 +148,8 @@ case ${M} in
 	    -Wl,--gc-sections \
             -fuse-ld=bfd -Wl,-T,${L}/ape.lds \
 	    -I ${I} \
+	    -include cosmopolitan.h \
+	    -include esperanto.h \
 	    -L ${L} \
 	    ${L}/${DRIVER} ${L}/crt.o ${L}/ape-no-modify-self.o ${L}/cosmopolitan.a
         ;;

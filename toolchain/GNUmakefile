@@ -64,9 +64,6 @@ bin/$(CONFIG_TARGET_TRIPLE)-%: %.in | bin
 include/cosmopolitan/cosmopolitan.h: $(HEADER)
 	@echo "GEN $@"
 	@cp $< $@
-	@echo "PATCH $@"
-	@echo '' >> $@
-	@echo '#include "esperanto.h"' >> $@
 
 %.o: %.c include/cosmopolitan/cosmopolitan.h
 	$(HOSTCOMPILE.c)
