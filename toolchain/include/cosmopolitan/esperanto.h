@@ -244,13 +244,13 @@
 #define EOVERFLOW 0
 #define EUNKNOWNERR 0
 
-#if defined(HAS_WAITPID) || defined(HAS_WAIT4)
+// #if defined(HAS_WAITPID) || defined(HAS_WAIT4)
 #undef WNOHANG
 #undef WUNTRACED
 
 #define WNOHANG 0
 #define WUNTRACED 0
-#endif /* defined(HAS_WAITPID) || defined(HAS_WAIT4) */
+// #endif /* defined(HAS_WAITPID) || defined(HAS_WAIT4) */
 
 #undef SIG_SETMASK
 #undef SIG_BLOCK
