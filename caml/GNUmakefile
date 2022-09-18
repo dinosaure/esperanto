@@ -44,7 +44,7 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	sed -i -e '/^char \$$2 ()\;/s/^/\/\//' ocaml/configure
 	sed -i -e '/^return \$$2 ()\;/c\return &\$$2\;' ocaml/configure
 # configure: Allow precise input of flags and libs
-	sed -i -e 's/oc_cflags="/oc_cflags="$$OC_CFLAGS /g' ocaml/configure
+	sed -i -e 's/oc_cflags="/oc_cflags="-z caml-startup $$OC_CFLAGS /g' ocaml/configure
 	sed -i -e 's/ocamlc_cflags="/ocamlc_cflags="$$OCAMLC_CFLAGS /g' ocaml/configure
 	sed -i -e 's/nativecclibs="$$cclibs $$DLLIBS"/nativecclibs="$$GLOBAL_LIBS"/g' ocaml/configure
 # runtime/Makefile: Runtime rules: don't build libcamlrun.a and import ocamlrun from the system
