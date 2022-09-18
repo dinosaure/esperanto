@@ -3,6 +3,7 @@
 #define __OCAML_ESPERANTO__
 
 #pragma GCC diagnostic ignored "-Wredundant-decls"
+/* XXX(dinosaure): only for OCaml and [./configure]. */
 
 #undef SIGUSR1
 #undef SIGUSR2
@@ -489,7 +490,8 @@ extern ssize_t __esperanto_pwrite(int, const void *, size_t, off_t);
 #endif /* CAML_NAME_SPACE */
 
 // XXX(dinosaure): for [mirage-crypto]
-#pragma GCC diagnostic ignored "-Wpedantic"
+#define __MIRAGE_CRYPTO_NO_ACCELERATE__
+#pragma GCC diagnostic ignored "-Wunused-variable"
 // XXX(dinosaure): for [ocaml-gmp]
 // Some warnings are promoted as errors due to Cosmopolitan's pragma
 // The existence of [FILE*] is checked by the definition of [__DEFINED_FILE]
@@ -498,6 +500,7 @@ extern ssize_t __esperanto_pwrite(int, const void *, size_t, off_t);
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #define __DEFINED_FILE
+#undef __GNUC__
 
 #ifndef __ESPERANTO_OFF_T__
 #define __ESPERANTO_OFF_T__
