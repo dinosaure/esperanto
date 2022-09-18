@@ -89,7 +89,10 @@ for arg do
 	-g)
 	    G=set
 	    ;;
-        -c|-S|-E)
+	-E)
+	    M=preprocesse
+	    ;;
+        -c|-S)
             M=compile
             ;;
         -z)
@@ -99,7 +102,7 @@ for arg do
             fi
     esac
 
-    [ "${arg##*.}" = "s" ] && A=set
+    [ "${arg##*.}" = "s" -o "${arg##*.}" = "S" ] && A=set
     [ "${arg}" = "-lunix" ] && WITH_UNIX=set
     [ "${arg}" = "-lthreads" -o "${arg}" = "-lthreadsnat" ] && WITH_THREADS=set
     # XXX(dinosaure): currently, [threadsnat] seems the more
@@ -111,18 +114,33 @@ done
 DRIVER="cosmopolitan_syscalls.o"
 
 case ${M} in
-    compile)
+    preprocesse)
         [ -n "${B}" ] && B="-DSUPPORT_VECTOR=${B}"
         [ -n "${__V}" ] && set -x
 	[ -z "${G}" -a -z "${A}" ] && G="-g" || G=
         exec @@CONFIG_TARGET_CC@@ \
             @@CONFIG_TARGET_CC_CFLAGS@@ \
 	    ${G} -O \
+            -nostdlib -nostdinc \
+	    -I ${I} \
+	    -imacros cosmopolitan.h \
+	    -imacros esperanto.h \
+	    ${B} \
+	    "$@"
+        ;;
+    compile)
+        [ -n "${B}" ] && B="-DSUPPORT_VECTOR=${B}"
+        [ -n "${__V}" ] && set -x
+	[ -z "${G}" -a -z "${A}" ] && G="-g" || G=
+	[ -z "${A}" ] && include_opt="-include" || include_opt="-imacros"
+        exec @@CONFIG_TARGET_CC@@ \
+            @@CONFIG_TARGET_CC_CFLAGS@@ \
+	    ${G} -O \
 	    -fno-pie -no-pie -mno-red-zone \
             -nostdlib -nostdinc -fno-omit-frame-pointer -mno-tls-direct-seg-refs \
 	    -I ${I} \
-	    -include cosmopolitan.h \
-	    -include esperanto.h \
+	    ${include_opt} cosmopolitan.h \
+	    ${include_opt} esperanto.h \
 	    ${B} \
 	    "$@"
         ;;
