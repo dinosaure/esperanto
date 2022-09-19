@@ -491,6 +491,8 @@ extern ssize_t __esperanto_pwrite(int, const void *, size_t, off_t);
 
 // XXX(dinosaure): for [mirage-crypto]
 #define __MIRAGE_CRYPTO_NO_ACCELERATE__
+#define MIN(a, b) ((a < b) ? (a) : (b))
+// XXX(dinosaure): on FreeBSD, MIN is undefined & required by [mirage-crypto]
 #pragma GCC diagnostic ignored "-Wunused-variable"
 // XXX(dinosaure): for [ocaml-gmp]
 // Some warnings are promoted as errors due to Cosmopolitan's pragma
