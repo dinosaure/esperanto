@@ -497,7 +497,9 @@ extern ssize_t __esperanto_pwrite(int, const void *, size_t, off_t);
 // The existence of [FILE*] is checked by the definition of [__DEFINED_FILE]
 // as musl does.
 #pragma GCC diagnostic ignored "-Wuninitialized"
+#if !defined(__clang__) // XXX(dinosaure): emit a warning with clang
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #define __DEFINED_FILE
 #undef __GNUC__

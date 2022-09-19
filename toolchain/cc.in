@@ -113,6 +113,15 @@ done
 
 DRIVER="cosmopolitan_syscalls.o"
 
+# XXX(dinosaure): note about [preprocesse]. Currently, we **don't** include
+# cosmopolitan.h & esperanto.h. This choice was made because
+# [domainstate.ml{,i}] was produced by a preprocesser like [cc -E]. If we
+# include our files, we generate bad files and [ocamlopt] is not able to
+# compile them then. On Ubuntu, the OCaml's [configure] recognizes [/lib/cpp]
+# as the preprocesser which is fine but, on FreeBSD, we use
+# [arch-esperanto-none-static-cc -E] (so, this script) so we must have a /well/
+# behavior for preprocessing.
+
 case ${M} in
     preprocesse)
         [ -n "${B}" ] && B="-DSUPPORT_VECTOR=${B}"
@@ -123,8 +132,6 @@ case ${M} in
 	    ${G} -O \
             -nostdlib -nostdinc \
 	    -I ${I} \
-	    -imacros cosmopolitan.h \
-	    -imacros esperanto.h \
 	    ${B} \
 	    "$@"
         ;;
