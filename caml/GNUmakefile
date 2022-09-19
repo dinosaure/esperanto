@@ -42,7 +42,7 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # configure: Do not try to redefine GCC builtins (we use Cosmopolitan which
 # does not have any builtins
 	sed -i -e '/^char \$$2 ()\;/s/^/\/\//' ocaml/configure
-	sed -i -e '/^return \$$2 ()\;/c\return &\$$2\;' ocaml/configure
+	sed -i -e 's/^return \$$2 ()\;/return \&\$$2\;/' ocaml/configure
 # configure: Allow precise input of flags and libs
 	sed -i -e 's/oc_cflags="/oc_cflags="-z caml-startup $$OC_CFLAGS /g' ocaml/configure
 	sed -i -e 's/ocamlc_cflags="/ocamlc_cflags="$$OCAMLC_CFLAGS /g' ocaml/configure
