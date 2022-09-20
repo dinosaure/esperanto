@@ -75,9 +75,9 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	sed -i -e '/ callback /s/^/\/\//' ocaml/runtime/caml/compatibility.h
 	sed -i -e '/ flush /s/^/\/\//' ocaml/runtime/caml/compatibility.h
 	sed -i -e '/pthread_mutexattr_settype/s/^/\/\//' ocaml/otherlibs/systhreads/st_posix.h
-	echo -e "ocamlrun:\n\tcp $(shell which ocamlrun) .\n" >> ocaml/runtime/Makefile
-	echo -e "ocamlrund:\n\tcp $(shell which ocamlrund) .\n" >> ocaml/runtime/Makefile
-	echo -e "ocamlruni:\n\tcp $(shell which ocamlruni) .\n" >> ocaml/runtime/Makefile
+	echo -e "ocamlrun:\n\tcp $(shell command -v ocamlrun) .\n" >> ocaml/runtime/Makefile
+	echo -e "ocamlrund:\n\tcp $(shell command -v ocamlrund) .\n" >> ocaml/runtime/Makefile
+	echo -e "ocamlruni:\n\tcp $(shell command -v ocamlruni) .\n" >> ocaml/runtime/Makefile
 	touch ocaml/runtime/libcamlrun.a ocaml/runtime/libcamlrund.a ocaml/runtime/libcamlruni.a
 # Comment a CAML_STATIC_ASSERT which emits warnings ("variably modified 'static_assertion_failure_line_XX'")
 	@if [ "$(MAKECONF_OCAML_VERSION)" = "4.14.0" ] ; then \
@@ -87,7 +87,7 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	fi
 # yacc/Makefile: import ocamlyacc from the system
 	sed -i -e 's/^ocamlyacc$$(EXE):.*/dummy:/g' ocaml/yacc/Makefile
-	echo -e "ocamlyacc:\n\tcp $(shell which ocamlyacc) .\n" >> ocaml/yacc/Makefile
+	echo -e "ocamlyacc:\n\tcp $(shell command -v ocamlyacc) .\n" >> ocaml/yacc/Makefile
 # tools/Makefile: stub out objinfo_helper
 	echo -e "objinfo_helper:\n\ttouch objinfo_helper\n" >> ocaml/tools/Makefile
 # av_cv_libm_cos=no is passed to configure to prevent -lm being used (which
