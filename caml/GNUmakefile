@@ -41,6 +41,9 @@ OCAMLRUND=$(shell which ocamlrund)
 OCAMLRUNI=$(shell which ocamlruni)
 OCAMLYACC=$(shell which ocamlyacc)
 ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
+# configure: Use /usr/bin/cpp instead of /lib/cpp
+	sed -e 's/\/lib\/cpp/\/usr\/bin\/cpp/g' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
 # configure: Do not build dynlink
 	sed -e 's/otherlibraries="dynlink"/otherlibraries=""/g' ocaml/configure > ocaml/configure.sed
 	mv ocaml/configure.sed ocaml/configure
