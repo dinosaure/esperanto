@@ -36,10 +36,10 @@ ocaml/Makefile:
 #   arrays to right **dynamic** values
 OC_CFLAGS=$(LOCAL_CFLAGS)
 OC_LIBS=-nostdlib $(MAKECONF_EXTRA_LIBS)
-OCAMLRUN=$(shell command -v ocamlrun)
-OCAMLRUND=$(shell command -v ocamlrund)
-OCAMLRUNI=$(shell command -v ocamlruni)
-OCAMLYACC=$(shell command -v ocamlyacc)
+OCAMLRUN=$(shell which ocamlrun)
+OCAMLRUND=$(shell which ocamlrund)
+OCAMLRUNI=$(shell which ocamlruni)
+OCAMLYACC=$(shell which ocamlyacc)
 ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # configure: Do not build dynlink
 	sed -e 's/otherlibraries="dynlink"/otherlibraries=""/g' ocaml/configure > ocaml/configure.sed
