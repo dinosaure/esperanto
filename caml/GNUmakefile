@@ -56,12 +56,12 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # runtime/Makefile: Runtime rules: don't build libcamlrun.a and import ocamlrun from the system
 	sed -e 's/^all: $$(BYTECODE_STATIC_LIBRARIES) $$(BYTECODE_SHARED_LIBRARIES)/all: primitives ld.conf/' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
 	mv ocaml/runtime/Makefile.sed ocaml/runtime/Makefile
-	sed -e 's/^ocamlrun$$(EXE):.*/dummy:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed0
-	cp ocaml/runtime/Makefile.sed0 ocaml/runtime/Makefile
-	sed -e 's/^ocamlruni$$(EXE):.*/dummyi:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed1
-	cp ocaml/runtime/Makefile.sed1 ocaml/runtime/Makefile
-	sed -e 's/^ocamlrund$$(EXE):.*/dummyd:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed2
-	cp ocaml/runtime/Makefile.sed2 ocaml/runtime/Makefile
+	sed -e 's/^ocamlrun$$(EXE):.*/dummy:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
+	mv ocaml/runtime/Makefile.sed ocaml/runtime/Makefile
+	sed -e 's/^ocamlruni$$(EXE):.*/dummyi:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
+	mv ocaml/runtime/Makefile.sed ocaml/runtime/Makefile
+	sed -e 's/^ocamlrund$$(EXE):.*/dummyd:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
+	mv ocaml/runtime/Makefile.sed ocaml/runtime/Makefile
 # extern.c defines a static write function which is in conflict with Cosmopolitan [write] function
 	sed -e 's/write(/_write(/' ocaml/runtime/extern.c > ocaml/runtime/extern.c.sed
 	mv ocaml/runtime/extern.c.sed ocaml/runtime/extern.c
