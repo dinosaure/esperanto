@@ -36,6 +36,10 @@ ocaml/Makefile:
 #   arrays to right **dynamic** values
 OC_CFLAGS=$(LOCAL_CFLAGS)
 OC_LIBS=-nostdlib $(MAKECONF_EXTRA_LIBS)
+OCAMLRUN=$(shell command -v ocamlrun)
+OCAMLRUND=$(shell command -v ocamlrund)
+OCAMLRUNI=$(shell command -v ocamlruni)
+OCAMLYACC=$(shell command -v ocamlyacc)
 ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # configure: Do not build dynlink
 	sed -e 's/otherlibraries="dynlink"/otherlibraries=""/g' ocaml/configure > ocaml/configure.sed
@@ -91,9 +95,9 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
 	sed -e '/pthread_mutexattr_settype/s/^/\/\//' ocaml/otherlibs/systhreads/st_posix.h > ocaml/otherlibs/systhreads/st_posix.h.sed
 	mv ocaml/otherlibs/systhreads/st_posix.h.sed ocaml/otherlibs/systhreads/st_posix.h
-	echo -e "ocamlrun:\n\tcp $(shell which ocamlrun) .\n" >> ocaml/runtime/Makefile
-	echo -e "ocamlrund:\n\tcp $(shell which ocamlrund) .\n" >> ocaml/runtime/Makefile
-	echo -e "ocamlruni:\n\tcp $(shell which ocamlruni) .\n" >> ocaml/runtime/Makefile
+	echo -e "ocamlrun:\n\tcp $(OCAMLRUN) .\n" >> ocaml/runtime/Makefile
+	echo -e "ocamlrund:\n\tcp $(OCAMLRUND) .\n" >> ocaml/runtime/Makefile
+	echo -e "ocamlruni:\n\tcp $(OCAMLRUNI) .\n" >> ocaml/runtime/Makefile
 	touch ocaml/runtime/libcamlrun.a ocaml/runtime/libcamlrund.a ocaml/runtime/libcamlruni.a
 # Comment a CAML_STATIC_ASSERT which emits warnings ("variably modified 'static_assertion_failure_line_XX'")
 	@if [ "$(MAKECONF_OCAML_VERSION)" = "4.14.0" ] ; then \
@@ -106,7 +110,7 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # yacc/Makefile: import ocamlyacc from the system
 	sed -e 's/^ocamlyacc$$(EXE):.*/dummy:/g' ocaml/yacc/Makefile > ocaml/yacc/Makefile.sed
 	mv ocaml/yacc/Makefile.sed ocaml/yacc/Makefile
-	echo -e "ocamlyacc:\n\tcp $(shell which ocamlyacc) .\n" >> ocaml/yacc/Makefile
+	echo -e "ocamlyacc:\n\tcp $(OCAMLYACC) .\n" >> ocaml/yacc/Makefile
 # tools/Makefile: stub out objinfo_helper
 	echo -e "objinfo_helper:\n\ttouch objinfo_helper\n" >> ocaml/tools/Makefile
 # av_cv_libm_cos=no is passed to configure to prevent -lm being used (which
