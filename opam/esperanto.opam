@@ -13,7 +13,7 @@ build: [
 install: ["sh" "-c" "cd caml ; %{make}% install" ]
 depends: [
   "ocaml-src" {build}
-  "cosmopolitan" {build}
+  "esperanto-cosmopolitan" {build}
 #  "cosmopolitan-pth" {build}
   "ocaml" {>= "4.13.0" & < "4.15.0"}
 ]

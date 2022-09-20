@@ -52,7 +52,7 @@ url {
 }
 EOM
 
-for PACKAGE in 'cosmopolitan' 'esperanto'; do
+for PACKAGE in 'esperanto-cosmopolitan' 'esperanto'; do
     PKG_DIR=${OUTPUT_DIR}/packages/${PACKAGE}/${PACKAGE}.${OPAM_VERSION}
     mkdir -p ${PKG_DIR} || exit 1
     cat opam/${PACKAGE}.opam ${OUTPUT_DIR}/tmp/url \
