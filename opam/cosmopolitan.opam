@@ -18,3 +18,4 @@ build: [
 install: [ "sh" "-c" "cd toolchain ; %{make}% install" ]
 synopsis: "Cosmopolitan toolchain for OCaml compiler"
 description: "A little toolchain for OCaml with Cosmopolitan"
+available: [ arch = "x86_64" ]
