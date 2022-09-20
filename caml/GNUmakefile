@@ -36,26 +36,45 @@ ocaml/Makefile:
 #   arrays to right **dynamic** values
 OC_CFLAGS=$(LOCAL_CFLAGS)
 OC_LIBS=-nostdlib $(MAKECONF_EXTRA_LIBS)
+OCAMLRUN=$(shell which ocamlrun)
+OCAMLRUND=$(shell which ocamlrund)
+OCAMLRUNI=$(shell which ocamlruni)
+OCAMLYACC=$(shell which ocamlyacc)
 ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
+# configure: Use /usr/bin/cpp instead of /lib/cpp
+	sed -e 's/\/lib\/cpp/\/usr\/bin\/cpp/g' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
 # configure: Do not build dynlink
-	sed -i -e 's/otherlibraries="dynlink"/otherlibraries=""/g' ocaml/configure
+	sed -e 's/otherlibraries="dynlink"/otherlibraries=""/g' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
 # configure: Do not try to redefine GCC builtins (we use Cosmopolitan which
 # does not have any builtins
-	sed -i -e '/^char \$$2 ()\;/s/^/\/\//' ocaml/configure
-	sed -i -e 's/^return \$$2 ()\;/return \&\$$2\;/' ocaml/configure
+	sed -e '/^char \$$2 ()\;/s/^/\/\//' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
+	sed -e 's/^return \$$2 ()\;/return \&\$$2\;/' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
 # configure: Allow precise input of flags and libs
-	sed -i -e 's/oc_cflags="/oc_cflags="-z caml-startup $$OC_CFLAGS /g' ocaml/configure
-	sed -i -e 's/ocamlc_cflags="/ocamlc_cflags="$$OCAMLC_CFLAGS /g' ocaml/configure
-	sed -i -e 's/nativecclibs="$$cclibs $$DLLIBS"/nativecclibs="$$GLOBAL_LIBS"/g' ocaml/configure
+	sed -e 's/oc_cflags="/oc_cflags="-z caml-startup $$OC_CFLAGS /g' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
+	sed -e 's/ocamlc_cflags="/ocamlc_cflags="$$OCAMLC_CFLAGS /g' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
+	sed -e 's/nativecclibs="$$cclibs $$DLLIBS"/nativecclibs="$$GLOBAL_LIBS"/g' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
 # runtime/Makefile: Runtime rules: don't build libcamlrun.a and import ocamlrun from the system
-	sed -i -e 's/^all: $$(BYTECODE_STATIC_LIBRARIES) $$(BYTECODE_SHARED_LIBRARIES)/all: primitives ld.conf/' ocaml/runtime/Makefile
-	sed -i -e 's/^ocamlrun$$(EXE):.*/dummy:/g' ocaml/runtime/Makefile
-	sed -i -e 's/^ocamlruni$$(EXE):.*/dummyi:/g' ocaml/runtime/Makefile
-	sed -i -e 's/^ocamlrund$$(EXE):.*/dummyd:/g' ocaml/runtime/Makefile
+	sed -e 's/^all: $$(BYTECODE_STATIC_LIBRARIES) $$(BYTECODE_SHARED_LIBRARIES)/all: primitives ld.conf/' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
+	mv ocaml/runtime/Makefile.sed ocaml/runtime/Makefile
+	sed -e 's/^ocamlrun$$(EXE):.*/dummy:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
+	mv ocaml/runtime/Makefile.sed ocaml/runtime/Makefile
+	sed -e 's/^ocamlruni$$(EXE):.*/dummyi:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
+	mv ocaml/runtime/Makefile.sed ocaml/runtime/Makefile
+	sed -e 's/^ocamlrund$$(EXE):.*/dummyd:/g' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
+	mv ocaml/runtime/Makefile.sed ocaml/runtime/Makefile
 # extern.c defines a static write function which is in conflict with Cosmopolitan [write] function
-	sed -i -e 's/write(/_write(/' ocaml/runtime/extern.c
+	sed -e 's/write(/_write(/' ocaml/runtime/extern.c > ocaml/runtime/extern.c.sed
+	mv ocaml/runtime/extern.c.sed ocaml/runtime/extern.c
 # roots_nats.c defines a link structure which is in conflict with Cosmopolitan [link] function
-	sed -i -e 's/\([^_]\)link/\1link_t/g' ocaml/runtime/roots_nat.c
+	sed -e 's/\([^_]\)link/\1link_t/g' ocaml/runtime/roots_nat.c > ocaml/runtime/roots_nat.c.sed
+	mv ocaml/runtime/roots_nat.c.sed ocaml/runtime/roots_nat.c
 # externalize some functions needed by our [startup.o] into [sys.c] and [signals.c]
 	cat esperanto_sys.c >> ocaml/runtime/sys.c
 	cat esperanto_signals.c >> ocaml/runtime/signals.c
@@ -71,28 +90,36 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	patch ocaml/otherlibs/unix/gethost.c esperanto_gethost.patch
 	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.$(MAKECONF_OCAML_VERSION).patch
 # We must comment [alloc], [callback] and [flush] which are `#define` by Cosmopolitan
-	sed -i -e '/ alloc /s/^/\/\//' ocaml/runtime/caml/compatibility.h
-	sed -i -e '/ callback /s/^/\/\//' ocaml/runtime/caml/compatibility.h
-	sed -i -e '/ flush /s/^/\/\//' ocaml/runtime/caml/compatibility.h
-	sed -i -e '/pthread_mutexattr_settype/s/^/\/\//' ocaml/otherlibs/systhreads/st_posix.h
-	echo -e "ocamlrun:\n\tcp $(shell which ocamlrun) .\n" >> ocaml/runtime/Makefile
-	echo -e "ocamlrund:\n\tcp $(shell which ocamlrund) .\n" >> ocaml/runtime/Makefile
-	echo -e "ocamlruni:\n\tcp $(shell which ocamlruni) .\n" >> ocaml/runtime/Makefile
+	sed -e '/ alloc /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
+	mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
+	sed -e '/ callback /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
+	mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
+	sed -e '/ flush /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
+	mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
+	sed -e '/pthread_mutexattr_settype/s/^/\/\//' ocaml/otherlibs/systhreads/st_posix.h > ocaml/otherlibs/systhreads/st_posix.h.sed
+	mv ocaml/otherlibs/systhreads/st_posix.h.sed ocaml/otherlibs/systhreads/st_posix.h
+	printf "ocamlrun:\n\tcp $(OCAMLRUN) .\n" >> ocaml/runtime/Makefile
+	printf "ocamlrund:\n\tcp $(OCAMLRUND) .\n" >> ocaml/runtime/Makefile
+	printf "ocamlruni:\n\tcp $(OCAMLRUNI) .\n" >> ocaml/runtime/Makefile
 	touch ocaml/runtime/libcamlrun.a ocaml/runtime/libcamlrund.a ocaml/runtime/libcamlruni.a
 # Comment a CAML_STATIC_ASSERT which emits warnings ("variably modified 'static_assertion_failure_line_XX'")
 	@if [ "$(MAKECONF_OCAML_VERSION)" = "4.14.0" ] ; then \
-	  sed -i -e "56,58 s/^/\/\//" ocaml/runtime/caml/domain_state.h; \
+	  sed -e "56,58 s/^/\/\//" ocaml/runtime/caml/domain_state.h > ocaml/runtime/caml/domain_state.h.sed; \
+	  mv ocaml/runtime/caml/domain_state.h.sed ocaml/runtime/caml/domain_state.h; \
 	else \
-	  sed -i -e "48,50 s/^/\/\//" ocaml/runtime/caml/domain_state.h; \
+	  sed -e "48,50 s/^/\/\//" ocaml/runtime/caml/domain_state.h > ocaml/runtime/caml/domain_state.h.sed; \
+	  mv ocaml/runtime/caml/domain_state.h.sed ocaml/runtime/caml/domain_state.h; \
 	fi
 # yacc/Makefile: import ocamlyacc from the system
-	sed -i -e 's/^ocamlyacc$$(EXE):.*/dummy:/g' ocaml/yacc/Makefile
-	echo -e "ocamlyacc:\n\tcp $(shell which ocamlyacc) .\n" >> ocaml/yacc/Makefile
+	sed -e 's/^ocamlyacc$$(EXE):.*/dummy:/g' ocaml/yacc/Makefile > ocaml/yacc/Makefile.sed
+	mv ocaml/yacc/Makefile.sed ocaml/yacc/Makefile
+	printf "ocamlyacc:\n\tcp $(OCAMLYACC) .\n" >> ocaml/yacc/Makefile
 # tools/Makefile: stub out objinfo_helper
-	echo -e "objinfo_helper:\n\ttouch objinfo_helper\n" >> ocaml/tools/Makefile
+	printf "objinfo_helper:\n\ttouch objinfo_helper\n" >> ocaml/tools/Makefile
 # av_cv_libm_cos=no is passed to configure to prevent -lm being used (which
 # would use the host system libm instead of the freestanding openlibm, see
 # https://github.com/mirage/ocaml-solo5/issues/101
+	chmod +x ocaml/configure
 	cd ocaml && \
 		CC="$(MAKECONF_CC)" \
 		OC_CFLAGS="$(OC_CFLAGS)" \

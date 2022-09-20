@@ -21,9 +21,9 @@ freebsd_task:
     - opam update
     - opam install dune
     - opam pin add -n -t .
-    - opam depext -yt cosmopolitan esperanto
-    - opam install -v -t cosmopolitan esperanto --deps-only
-  build_script: opam reinstall -t -v cosmopolitan esperanto
+    - opam depext -yt esperanto-cosmopolitan esperanto
+    - opam install -v -t esperanto-cosmopolitan esperanto --deps-only
+  build_script: opam reinstall -t -v esperanto-cosmopolitan esperanto
   test_script:
     - cd example/
     - opam install ocamlfind

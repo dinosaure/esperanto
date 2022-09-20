@@ -18,7 +18,7 @@ jobs:
     - name: Pinning packages
       run: opam pin add -n -t -y .
     - name: Install cosmopolitan/esperanto and dune
-      run: opam depext -iyt -v cosmopolitan esperanto dune
+      run: opam depext -iyt -v esperanto-cosmopolitan esperanto dune
     - name: Compiling example project (cat.com)
       run: |
         cd example/
