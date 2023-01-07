@@ -103,7 +103,7 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	printf "ocamlruni:\n\tcp $(OCAMLRUNI) .\n" >> ocaml/runtime/Makefile
 	touch ocaml/runtime/libcamlrun.a ocaml/runtime/libcamlrund.a ocaml/runtime/libcamlruni.a
 # Comment a CAML_STATIC_ASSERT which emits warnings ("variably modified 'static_assertion_failure_line_XX'")
-	@if [ "$(MAKECONF_OCAML_VERSION)" = "4.14.0" ] ; then \
+	@if [ "$(MAKECONF_OCAML_VERSION)" = "4.14.0" -o "$(MAKECONF_OCAML_VERSION)" = "4.14.1" ] ; then \
 	  sed -e "56,58 s/^/\/\//" ocaml/runtime/caml/domain_state.h > ocaml/runtime/caml/domain_state.h.sed; \
 	  mv ocaml/runtime/caml/domain_state.h.sed ocaml/runtime/caml/domain_state.h; \
 	else \
