@@ -4,17 +4,19 @@ let ( / ) = Filename.concat
 
 let expected =
   [ "dst/cosmopolitan.h",
-    (Digest.of_hex "c14dc385e73ab4841bdb91cd44899797a3d38613218bc4465b08e6ab9560b3de")
+    (Digest.of_hex "8343e36ca67a616bbb06e86bf6faf8e3e98baac93184c55b3e8515708d864dd7")
   ; "dst/ape.lds",
-    (Digest.of_hex "23b3fe457a2f16290890445462697b3369b9789a2d08f2f9a9ea0e715ecc02a3")
+    (Digest.of_hex "ef8f58405b738e22979b3b271179107322c537f883d830ef220c084b82cd9334")
   ; "dst/crt.o",
-    (Digest.of_hex "45b97b158e1e234fce927379c2ffa64e45bb84ea894ec6c64e1e17f9da515691")
+    (Digest.of_hex "33c5df0a9c53cbaa2b64e5c1cd7d97a6c0b8b3767621d6f98562e74b2fbd2a8c")
   ; "dst/ape.o",
-    (Digest.of_hex "83fbbcb4dbb5c96a0f77b5e7dc6f5e1ee8cac1c59dab5029a3d0b3154c87783c")
+    (Digest.of_hex "8e52a3a8f46dd40f67bb24944d91165f853e6c8703a3ef7b9dafcd83beb9a8a0")
   ; "dst/ape-no-modify-self.o",
-    (Digest.of_hex "302928befaf13e44e05ecc1f51343966cb5d66deddcf002fd0d35b651ed178d0")
+    (Digest.of_hex "c733b326abf8d1521affa679332eac83ed05f822babb86467b7a8b35dd442e1a")
   ; "dst/cosmopolitan.a",
-    (Digest.of_hex "bcd3e79666cf9324b62733eaae12070b65b62feee0b40aa15c0d891b628ba261") ]
+    (Digest.of_hex "feca2c30dc55be7de1a4282bd7c954c8839b7118f3ec1348f96f0b543c442fb6")
+  ; "dst/ape-copy-self.o",
+    (Digest.of_hex "16b3b7b1f7803b9820348ec199a56446ece17b4d7412cf920701c272edd92eeb") ]
 
 let digest filename =
   let tmp = Bytes.create 0x1000 in

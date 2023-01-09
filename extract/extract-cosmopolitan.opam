@@ -25,7 +25,3 @@ depends: [
   "digestif"
   "bigstringaf"
 ]
-
-pin-depends: [
-  [ "digestif.dev" "git+https://github.com/mirage/digestif.git#7adc43cc8d1d80c2d9104dabd5730425b1b7ace8" ]
-]
