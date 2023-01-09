@@ -8,6 +8,7 @@ freebsd_task:
     matrix:
       - OCAML_VERSION: 4.13.1
       - OCAML_VERSION: 4.14.0
+      - OCAML_VERSION: 4.14.1
   pkg_install_script: pkg install -y ocaml-opam binutils gmake bash
   opam_ocaml_cache:
     folder: $HOME/.opam
