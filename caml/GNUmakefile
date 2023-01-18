@@ -40,6 +40,8 @@ OCAMLRUN=$(shell which ocamlrun)
 OCAMLRUND=$(shell which ocamlrund)
 OCAMLRUNI=$(shell which ocamlruni)
 OCAMLYACC=$(shell which ocamlyacc)
+OCAML_VERSION_MAJOR=$(shell echo $(MAKECONF_OCAML_VERSION) | cut -d. -f1)
+OCAML_VERSION_MINOR=$(shell echo $(MAKECONF_OCAML_VERSION) | cut -d. -f2)
 ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # configure: Use /usr/bin/cpp instead of /lib/cpp
 	sed -e 's/\/lib\/cpp/\/usr\/bin\/cpp/g' ocaml/configure > ocaml/configure.sed
@@ -88,7 +90,7 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	cat esperanto_systhreads_signals.c >> ocaml/otherlibs/systhreads/st_posix.h
 	cat esperanto_termios.c >> ocaml/otherlibs/unix/termios.c
 	patch ocaml/otherlibs/unix/gethost.c esperanto_gethost.patch
-	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.$(MAKECONF_OCAML_VERSION).patch
+	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.$(OCAML_VERSION_MAJOR).$(OCAML_VERSION_MINOR).patch
 # We must comment [alloc], [callback] and [flush] which are `#define` by Cosmopolitan
 	sed -e '/ alloc /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
 	mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
@@ -103,7 +105,8 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	printf "ocamlruni:\n\tcp $(OCAMLRUNI) .\n" >> ocaml/runtime/Makefile
 	touch ocaml/runtime/libcamlrun.a ocaml/runtime/libcamlrund.a ocaml/runtime/libcamlruni.a
 # Comment a CAML_STATIC_ASSERT which emits warnings ("variably modified 'static_assertion_failure_line_XX'")
-	@if [ "$(MAKECONF_OCAML_VERSION)" = "4.14.0" -o "$(MAKECONF_OCAML_VERSION)" = "4.14.1" ] ; then \
+# for >= OCaml 4.14 & then < OCaml 4.14
+	@if [ "$(OCAML_VERSION_MAJOR)" -ge "4" -a "$(OCAML_VERSION_MINOR)" -ge "14" ] ; then \
 	  sed -e "56,58 s/^/\/\//" ocaml/runtime/caml/domain_state.h > ocaml/runtime/caml/domain_state.h.sed; \
 	  mv ocaml/runtime/caml/domain_state.h.sed ocaml/runtime/caml/domain_state.h; \
 	else \
