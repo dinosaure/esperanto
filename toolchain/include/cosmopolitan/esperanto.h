@@ -436,13 +436,10 @@
 #define TCOFLUSH 0
 #define TCIOFLUSH 0
 
-/* XXX(dinosaure): when we want to run lwt code, we must
- * re-inject few functions with [pth] equivalent functions.
- * At the beginning so, we redefine them and the toolchain
- * will inject them depending on [WITH_THREAD] value.
- * - if it sets, we use Cosmopolitan's functions
- * - otherwise, we expect [pth] equivalent functions
- */
+/* XXX(dinosaure): This set of functions is a relicat (from [pth]) which can be
+ * interesting to plug a specific implementation of these syscalls at the link
+ * time. On [cc.in]/[ld.in], you can see the [${DRIVER}] variable which can be
+ * set by the user with something else than Cosmopolitan. */
 extern pid_t   __esperanto_fork(void);
 extern int     __esperanto_nanosleep(const struct timespec *, struct timespec *);
 extern int     __esperanto_usleep(unsigned int);
