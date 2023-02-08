@@ -159,7 +159,6 @@ case ${M} in
 	[ -n "${WITH_UNIX}" ]  \
 	  && WITH_UNIX="${L}/startup_unix.o" \
 	  || WITH_UNIX="${L}/fake_unix.o"
-	[ -n "${WITH_THREADS}" ] && DRIVER="pth_syscalls.o"
 	[ -n "${WITH_THREADS}" ] \
           && WITH_THREADS="${L}/startup_threads.o" \
           || WITH_THREADS="${L}/fake_threads.o"

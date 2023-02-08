@@ -68,7 +68,7 @@ include/cosmopolitan/cosmopolitan.h: $(HEADER)
 %.o: %.c include/cosmopolitan/cosmopolitan.h
 	$(HOSTCOMPILE.c)
 
-lib/cosmopolitan: $(ARCHIVE) $(LINK) $(OBJECTS) startup.o startup_unix.o fake_unix.o startup_threads.o fake_threads.o cosmopolitan_syscalls.o pth_syscalls.o
+lib/cosmopolitan: $(ARCHIVE) $(LINK) $(OBJECTS) startup.o startup_unix.o fake_unix.o startup_threads.o fake_threads.o cosmopolitan_syscalls.o
 	@echo "GEN $@"
 	@mkdir -p $@
 	@cp $^ $@
@@ -130,7 +130,6 @@ clean:
 	$(RM) fake_unix.o fake_unix.d
 	$(RM) fake_threads.o fake_threads.d
 	$(RM) cosmopolitan_syscalls.o cosmopolitan_syscalls.d
-	$(RM) pth_syscalls.o pth_syscalls.d
 
 .PHONY: distclean
 distclean: clean
