@@ -107,7 +107,7 @@ DRIVER=cosmopolitan_syscalls.o
   || WITH_THREADS="${L}/fake_threads.o"
 exec @@CONFIG_TARGET_LD@@ \
     ${G} -static -nostdlib \
-    -nostdlib -nostdinc -fno-omit-frame-pointer -mnop-mcount -mno-tls-direct-seg-refs \
+    -nostdlib -nostdinc -fno-omit-frame-pointer -mno-tls-direct-seg-refs \
     @@CONFIG_TARGET_LD_LDFLAGS@@ ${S} ${B} "$@" \
     -Wl,--gc-sections \
     -fuse-ld=bfd -T ${L}/ape.lds \
