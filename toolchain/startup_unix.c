@@ -37,7 +37,7 @@ struct speed_e {
 };
 
 extern void _esperanto_init_terminal_io_descr(const long[]);
-extern void _esperanto_init_speedtable(const struct speed_e[]);
+extern void _esperanto_init_speedtable(const struct speed_e*);
 extern void _esperanto_init_when_flag_table(const int[]);
 extern void _esperanto_init_queue_flag_table(const int[]);
 
@@ -147,26 +147,29 @@ void _esperanto_init_unix() {
   struct speed_e speedtable[] = {
 
       /* standard speeds */
-      {B0, 0},
-      {B50, 50},
-      {B75, 75},
-      {B110, 110},
-      {B134, 134},
-      {B150, 150},
+      /* XXX(dinosaure): they are not available with Cosmopolitan v2.2-96-gae365928c,
+       * I decided to comment all of them and make an issue on Cosmopolitan to find
+       * a better solution. */
+      // {B0, 0},
+      // {B50, 50},
+      // {B75, 75},
+      // {B110, 110},
+      // {B134, 134},
+      // {B150, 150},
 #ifdef B200
       /* Shouldn't need to be ifdef'd but I'm not sure it's available
          everywhere. */
       {B200, 200},
 #endif
-      {B300, 300},
-      {B600, 600},
-      {B1200, 1200},
-      {B1800, 1800},
-      {B2400, 2400},
-      {B4800, 4800},
-      {B9600, 9600},
-      {B19200, 19200},
-      {B38400, 38400},
+      // {B300, 300},
+      // {B600, 600},
+      // {B1200, 1200},
+      // {B1800, 1800},
+      // {B2400, 2400},
+      // {B4800, 4800},
+      // {B9600, 9600},
+      // {B19200, 19200},
+      // {B38400, 38400},
 
   /* usual extensions */
 #ifdef B57600
