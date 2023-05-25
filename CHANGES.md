@@ -1,3 +1,8 @@
+## v0.0.4 (2023-05-25) Paris - France
+
+- Fix the compilation of `threads.cmxa` (@dinosaure, #38)
+- Update to the last version of Cosmopolitan (@dinosaure, #40)
+
 ## v0.0.3 (2023-03-08) Paris - France
 
 - Delete the `pth` relicat and directly use `pthread` from Cosmopolitan (#33, @dinosaure)
