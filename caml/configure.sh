@@ -22,7 +22,7 @@ Options:
     --prefix=DIR:
         Installation prefix (default: /usr/local).
     --target=TARGET
-        Esperanto compiler toolchain to use.
+        Cosmopolitan compiler toolchain to use.
     --ocaml-configure-option=OPTION
         Add an option to the OCaml compiler configuration.
 EOM
@@ -31,7 +31,9 @@ EOM
 
 OCAML_CONFIGURE_OPTIONS=
 OCAML_VERSION=$(ocamlopt -version)
-MAKECONF_PREFIX=/usr/local
+MAKECONF_PREFIX="/usr/local"
+CC=cc
+
 while [ $# -gt 0 ]; do
     OPT="$1"
 
@@ -39,11 +41,11 @@ while [ $# -gt 0 ]; do
         --target=*)
             CONFIG_TARGET="${OPT##*=}"
             ;;
-        --prefix=*)
-            MAKECONF_PREFIX="${OPT##*=}"
-            ;;
         --ocaml-configure-option=*)
             OCAML_CONFIGURE_OPTIONS="${OCAML_CONFIGURE_OPTIONS} ${OPT##*=}"
+            ;;
+        --prefix=*)
+            MAKECONF_PREFIX="${OPT##*=}"
             ;;
         --help)
             usage
@@ -59,7 +61,7 @@ done
 
 [ -z "${CONFIG_TARGET}" ] && die "The --target option needs to be specified."
 
-MAKECONF_CFLAGS="-D__STRICT_ANSI__"
+MAKECONF_CFLAGS=
 MAKECONF_CC="$CONFIG_TARGET-cc"
 MAKECONF_LD="$CONFIG_TARGET-ld"
 MAKECONF_AS="$MAKECONF_CC -c"
@@ -67,8 +69,6 @@ MAKECONF_AS="$MAKECONF_CC -c"
 BUILD_TRIPLET="$($MAKECONF_CC -dumpmachine)"
 OCAML_BUILD_ARCH=
 
-# Canonicalize BUILD_ARCH and set OCAML_BUILD_ARCH. The former is for autoconf,
-# the latter for the rest of the OCaml build system.
 case "${BUILD_TRIPLET}" in
     amd64-*|x86_64-*)
         BUILD_ARCH="x86_64"
@@ -79,19 +79,35 @@ case "${BUILD_TRIPLET}" in
         OCAML_BUILD_ARCH="arm64"
         ;;
     *)
-        die "Unsupported architecture: ${BUILD_TRIPLET}"
+        die "Unsupported target architecture: ${BUILD_TRIPLET}"
         ;;
 esac
 
+TRIPLET="$($CC -dumpmachine)"
+ARCH=
+
+case "${TRIPLET}" in
+    amd64-*|x86_64-*)
+        ARCH="x86_64"
+        ;;
+    aarch64-*)
+        die "The Cosmoplitan distribution works only on x86_64 architecture"
+        ;;
+    *)
+        die "Unsupported host architecture: ${TRIPLET}"
+        ;;
+esac
+
+# cosmocross takes care about extra libs (despite ocaml-solo5/solo5)
 EXTRA_LIBS=
 
 cat <<EOM >Makeconf
 MAKECONF_PREFIX=${MAKECONF_PREFIX}
 MAKECONF_CFLAGS=${MAKECONF_CFLAGS}
-MAKECONF_TOOLCHAIN=${CONFIG_TARGET}
 MAKECONF_CC=${MAKECONF_CC}
 MAKECONF_LD=${MAKECONF_LD}
 MAKECONF_AS=${MAKECONF_AS}
+MAKECONF_ARCH=${ARCH}
 MAKECONF_BUILD_ARCH=${BUILD_ARCH}
 MAKECONF_OCAML_BUILD_ARCH=${OCAML_BUILD_ARCH}
 MAKECONF_OCAML_CONFIGURE_OPTIONS=${OCAML_CONFIGURE_OPTIONS}

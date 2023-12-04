@@ -7,15 +7,18 @@ license: "MIT"
 tags: "org:mirage"
 dev-repo: "git+https://github.com/dinosaure/esperanto.git"
 build: [
-  [ "sh" "-c" "cd toolchain && ./configure.sh --prefix=%{prefix}%" ]
-  [ make "-C" "toolchain" "all" "V=1" ]
+  [ make "-C" "toolchain" ]
 ]
-# We should depend on conf-binutils but the package does not work on FreeBSD
-# even if we can do [pkg install binutils] on FreeBSD 12
-# depends: [
-#   "conf-binutils"
-# ]
-install: [ make "-C" "toolchain" "install" ]
+install: [
+  [ make "-C" "toolchain" "PREFIX=%{prefix}%" "install" ]
+]
+depends: [
+  "dune"
+  "decompress"
+  "checkseum"
+  "digestif"
+# "conf-binutils"
+]
 synopsis: "Cosmopolitan toolchain for OCaml compiler"
 description: "A little toolchain for OCaml with Cosmopolitan"
 available: [ arch = "x86_64" & (os = "linux" | os = "freebsd" | os = "openbsd") ]

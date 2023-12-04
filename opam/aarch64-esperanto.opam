@@ -1,0 +1,23 @@
+opam-version: "2.0"
+maintainer: "Romain Calascibetta <romain.calascibetta@gmail.com>"
+authors: "Romain Calascibetta <romain.calascibetta@gmail.com>"
+homepage: "https://github.com/dinosaure/esperanto"
+bug-reports: "https://github.com/dinosaure/esperanto/issues/"
+license: "MIT"
+tags: "org:mirage"
+dev-repo: "git+https://github.com/dinosaure/esperanto.git"
+build: [
+  ["sh" "-c" "cd caml && ./configure.sh --prefix=%{prefix}% \
+              --target=aarch64-unknown-cosmo" ]
+  ["sh" "-c" "make -C caml -j%{jobs}%"]
+]
+install: ["sh" "-c" "make -C caml install" ]
+depends: [
+  "conf-which" {build}
+  "ocaml-src" {build}
+  "esperanto-cosmopolitan" {build}
+  "ocaml" {>= "4.13.0" & < "4.15.0"}
+]
+synopsis: "An OCaml compiler with Cosmopolitan"
+description:
+  "An OCaml compiler (toolchain) with Cosmopolitan as the C library"
