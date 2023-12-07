@@ -88,6 +88,10 @@ ocaml/Makefile.config: ocaml/Makefile ocaml/esperanto.h
 # roots_nats.c defines a link structure which is in conflict with Cosmopolitan [link] function
 	sed -e 's/\([^_]\)link/\1link_t/g' ocaml/runtime/roots_nat.c > ocaml/runtime/roots_nat.c.sed
 	mv ocaml/runtime/roots_nat.c.sed ocaml/runtime/roots_nat.c
+# use x25 instead of x28 (which is used by Cosmopolitan) for aarch64
+	patch ocaml/asmcomp/arm64/emit.mlp emit.mlp.aarch64.patch
+	patch ocaml/asmcomp/arm64/proc.ml proc.ml.aarch64.patch
+	patch ocaml/runtime/arm64.S arm64.S.patch
 # externalize some functions needed by our [startup.o] into [sys.c] and [signals.c]
 # cat esperanto_sys.c >> ocaml/runtime/sys.c
 # cat esperanto_signals.c >> ocaml/runtime/signals.c

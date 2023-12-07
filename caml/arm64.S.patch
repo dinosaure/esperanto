@@ -1,0 +1,29 @@
+--- runtime/arm64.S
++++ runtime/arm64.S
+@@ -20,7 +20,7 @@
+ 
+ /* Special registers */
+ 
+-#define DOMAIN_STATE_PTR x28
++#define DOMAIN_STATE_PTR x25
+ #define TRAP_PTR x26
+ #define ALLOC_PTR x27
+ #define ADDITIONAL_ARG x8
+@@ -183,7 +183,7 @@ L(caml_call_gc):
+         stp     x19, x20, [sp, 144]
+         stp     x21, x22, [sp, 160]
+         stp     x23, x24, [sp, 176]
+-        str     x25, [sp, 192]
++     /* str     x25, [sp, 192] */
+      /* Save caller-save floating-point registers on the stack
+         (callee-saves are preserved by caml_garbage_collection) */
+         stp     d0, d1, [sp, 208]
+@@ -219,7 +219,7 @@ L(caml_call_gc):
+         ldp     x19, x20, [sp, 144]
+         ldp     x21, x22, [sp, 160]
+         ldp     x23, x24, [sp, 176]
+-        ldr     x25, [sp, 192]
++    /*  ldr     x25, [sp, 192] */
+         ldp     d0, d1, [sp, 208]
+         ldp     d2, d3, [sp, 224]
+         ldp     d4, d5, [sp, 240]
