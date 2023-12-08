@@ -2,7 +2,9 @@
 (context (default))
 (context
  (default
-  (name esperanto)
-  (toolchain esperanto)
-  (merlin)
-  (host default)))
+  (name x86_64-esperanto)
+  (toolchain x86_64_esperanto)))
+(context
+ (default
+  (name aarch64-esperanto)
+  (toolchain aarch64_esperanto)))

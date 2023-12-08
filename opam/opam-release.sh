@@ -38,10 +38,10 @@ url {
   checksum: "sha512=${CHECKSUM}"
 }
 EOM
-for PKG in '' '-cosmopolitan'; do
-	PKG_DIR=${OUTPUT_DIR}/packages/esperanto${PKG}/esperanto${PKG}.${OPAM_VERSION}
+for PKG in 'x86_64-esperanto' 'aarch64-esperanto' 'esperanto-cosmopolitan'; do
+	PKG_DIR=${OUTPUT_DIR}/packages/${PKG}/${PKG}.${OPAM_VERSION}
 	mkdir -p ${PKG_DIR} || exit 1
-	cat opam/esperanto${PKG}.opam ${OUTPUT_DIR}/tmp/url \
+	cat opam/${PKG}.opam ${OUTPUT_DIR}/tmp/url \
 		> ${PKG_DIR}/opam || exit 1
 	opam lint ${PKG_DIR}/opam || exit 1
 done

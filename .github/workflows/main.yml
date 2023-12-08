@@ -5,10 +5,12 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
-        ocaml-version: ["4.13.1", "4.14.0", "4.14.1"]
+        ocaml-version: ["4.14.1"]
     runs-on: ${{ matrix.operating-system }}
     steps:
     - uses: actions/checkout@v2
+      with:
+        lfs: true
     - uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: ${{ matrix.ocaml-version }}
@@ -16,14 +18,15 @@ jobs:
     - name: Fix binfmt and Cosmopolitan
       run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
     - name: Pinning packages
-      run: opam pin add -n -t -y .
+      run: opam pin add -t -yn -vvv --kind=path .
     - name: Install cosmopolitan/esperanto and dune
-      run: opam depext -iyt -v esperanto-cosmopolitan esperanto dune
+      run: opam depext -iyt -v esperanto-cosmopolitan x86_64-esperanto aarch64-esperanto dune
     - name: Compiling example project (cat.com)
       run: |
         cd example/
         opam install ocamlfind
-        opam exec -- dune build ./cat.com
+        opam exec -- dune build ./cat.exe
+        opam exec -- ./link.sh
     - name: Execute cat.com
       run: |
         cd example/

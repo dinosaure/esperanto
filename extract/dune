@@ -1,9 +1,0 @@
-(executable
- (name extract)
- (libraries decompress.de bigstringaf fmt digestif))
-
-(rule
- (target extract.com)
- (deps extract.exe)
- (mode promote)
- (action (run objcopy -S -O binary %{deps} %{target})))

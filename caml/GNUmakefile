@@ -2,9 +2,10 @@
 
 include Makeconf
 
-all: ocaml esperanto.conf
+all: ocaml $(MAKECONF_BUILD_ARCH)-esperanto.conf
 
 TOP=$(abspath .)
+SHELL := env PATH=$(PATH) ${SHELL}
 
 # CFLAGS used to build ocaml runtime
 LOCAL_CFLAGS=$(MAKECONF_CFLAGS)
@@ -16,6 +17,9 @@ GLOBAL_LIBS=$(MAKECONF_EXTRA_LIBS)
 # OCAML
 ocaml/Makefile:
 	cp -r `opam var prefix`/lib/ocaml-src ./ocaml
+
+ocaml/esperanto.h: ocaml/Makefile esperanto.h
+	cp esperanto.h $@
 
 # OCaml >= 4.08.0 uses an autotools-based build system. In this case we
 # convince it to think it's using the Solo5 compiler as a cross compiler, and
@@ -35,14 +39,14 @@ ocaml/Makefile:
 # - We must tweak runtime/sys.c and runtime/signals.c to correctly set internal
 #   arrays to right **dynamic** values
 OC_CFLAGS=$(LOCAL_CFLAGS)
-OC_LIBS=-nostdlib $(MAKECONF_EXTRA_LIBS)
+OC_LIBS=$(MAKECONF_EXTRA_LIBS)
 OCAMLRUN=$(shell which ocamlrun)
 OCAMLRUND=$(shell which ocamlrund)
 OCAMLRUNI=$(shell which ocamlruni)
 OCAMLYACC=$(shell which ocamlyacc)
 OCAML_VERSION_MAJOR=$(shell echo $(MAKECONF_OCAML_VERSION) | cut -d. -f1)
 OCAML_VERSION_MINOR=$(shell echo $(MAKECONF_OCAML_VERSION) | cut -d. -f2)
-ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
+ocaml/Makefile.config: ocaml/Makefile ocaml/esperanto.h
 # configure: Use /usr/bin/cpp instead of /lib/cpp
 	sed -e 's/\/lib\/cpp/\/usr\/bin\/cpp/g' ocaml/configure > ocaml/configure.sed
 	mv ocaml/configure.sed ocaml/configure
@@ -56,11 +60,18 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 	sed -e 's/^return \$$2 ()\;/return \&\$$2\;/' ocaml/configure > ocaml/configure.sed
 	mv ocaml/configure.sed ocaml/configure
 # configure: Allow precise input of flags and libs
-	sed -e 's/oc_cflags="/oc_cflags="-z caml-startup $$OC_CFLAGS /g' ocaml/configure > ocaml/configure.sed
+	sed -e 's/oc_cflags="/oc_cflags="$$OC_CFLAGS /g' ocaml/configure > ocaml/configure.sed
 	mv ocaml/configure.sed ocaml/configure
 	sed -e 's/ocamlc_cflags="/ocamlc_cflags="$$OCAMLC_CFLAGS /g' ocaml/configure > ocaml/configure.sed
 	mv ocaml/configure.sed ocaml/configure
 	sed -e 's/nativecclibs="$$cclibs $$DLLIBS"/nativecclibs="$$GLOBAL_LIBS"/g' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
+# configure:
+# math functions require <math.h> and sigaction requires <signal.h>
+# some of them are macros, the configure must not #undef them
+	sed -e 's/#undef $$2/#include "esperanto.h"/' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
+	sed -e '/#define $$2 innocuous_$$2/d' ocaml/configure > ocaml/configure.sed
 	mv ocaml/configure.sed ocaml/configure
 # runtime/Makefile: Runtime rules: don't build libcamlrun.a and import ocamlrun from the system
 	sed -e 's/^all: $$(BYTECODE_STATIC_LIBRARIES) $$(BYTECODE_SHARED_LIBRARIES)/all: primitives ld.conf/' ocaml/runtime/Makefile > ocaml/runtime/Makefile.sed
@@ -77,29 +88,38 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # roots_nats.c defines a link structure which is in conflict with Cosmopolitan [link] function
 	sed -e 's/\([^_]\)link/\1link_t/g' ocaml/runtime/roots_nat.c > ocaml/runtime/roots_nat.c.sed
 	mv ocaml/runtime/roots_nat.c.sed ocaml/runtime/roots_nat.c
+# use x25 instead of x28 (which is used by Cosmopolitan) for aarch64
+	patch ocaml/asmcomp/arm64/emit.mlp emit.mlp.aarch64.patch
+	patch ocaml/asmcomp/arm64/proc.ml proc.ml.aarch64.patch
+	patch ocaml/runtime/arm64.S arm64.S.patch
+# system() is defined by <stdio.h> instead of <stdlib.h>
+	sed -e 's/ac_cv_have_decl_system" "#include <stdlib.h>$$/ac_cv_have_decl_system" "#include <stdio.h>/' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
 # externalize some functions needed by our [startup.o] into [sys.c] and [signals.c]
-	cat esperanto_sys.c >> ocaml/runtime/sys.c
-	cat esperanto_signals.c >> ocaml/runtime/signals.c
-	cat esperanto_permission.c >> ocaml/otherlibs/unix/access.c
-	cat esperanto_open.c >> ocaml/otherlibs/unix/open.c
-	cat esperanto_socket.c >> ocaml/otherlibs/unix/socket.c
-	cat esperanto_sockopt.c >> ocaml/otherlibs/unix/sockopt.c
-	cat esperanto_unixsupport.c >> ocaml/otherlibs/unix/unixsupport.c
-	cat esperanto_wait.c >> ocaml/otherlibs/unix/wait.c
-	cat esperanto_unix_signals.c >> ocaml/otherlibs/unix/signals.c
-	cat esperanto_systhreads_signals.c >> ocaml/otherlibs/systhreads/st_posix.h
-	cat esperanto_termios.c >> ocaml/otherlibs/unix/termios.c
-	patch ocaml/otherlibs/unix/gethost.c esperanto_gethost.patch
-	patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.$(OCAML_VERSION_MAJOR).$(OCAML_VERSION_MINOR).patch
+# cat esperanto_sys.c >> ocaml/runtime/sys.c
+# cat esperanto_signals.c >> ocaml/runtime/signals.c
+# cat esperanto_permission.c >> ocaml/otherlibs/unix/access.c
+# cat esperanto_open.c >> ocaml/otherlibs/unix/open.c
+# cat esperanto_socket.c >> ocaml/otherlibs/unix/socket.c
+# cat esperanto_sockopt.c >> ocaml/otherlibs/unix/sockopt.c
+# cat esperanto_unixsupport.c >> ocaml/otherlibs/unix/unixsupport.c
+# cat esperanto_wait.c >> ocaml/otherlibs/unix/wait.c
+# cat esperanto_unix_signals.c >> ocaml/otherlibs/unix/signals.c
+# cat esperanto_systhreads_signals.c >> ocaml/otherlibs/systhreads/st_posix.h
+# cat esperanto_termios.c >> ocaml/otherlibs/unix/termios.c
+# patch ocaml/otherlibs/unix/gethost.c esperanto_gethost.patch
+# patch ocaml/otherlibs/unix/socketaddr.c esperanto_socketaddr.$(OCAML_VERSION_MAJOR).$(OCAML_VERSION_MINOR).patch
 # We must comment [alloc], [callback] and [flush] which are `#define` by Cosmopolitan
-	sed -e '/ alloc /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
-	mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
-	sed -e '/ callback /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
-	mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
-	sed -e '/ flush /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
-	mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
-	sed -e '/pthread_mutexattr_settype/s/^/\/\//' ocaml/otherlibs/systhreads/st_posix.h > ocaml/otherlibs/systhreads/st_posix.h.sed
-	mv ocaml/otherlibs/systhreads/st_posix.h.sed ocaml/otherlibs/systhreads/st_posix.h
+# sed -e '/ alloc /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
+# mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
+# sed -e '/ callback /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
+# mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
+# sed -e '/ flush /s/^/\/\//' ocaml/runtime/caml/compatibility.h > ocaml/runtime/caml/compatibility.h.sed
+# mv ocaml/runtime/caml/compatibility.h.sed ocaml/runtime/caml/compatibility.h
+# sed -e '/pthread_mutexattr_settype/s/^/\/\//' ocaml/otherlibs/systhreads/st_posix.h > ocaml/otherlibs/systhreads/st_posix.h.sed
+#	mv ocaml/otherlibs/systhreads/st_posix.h.sed ocaml/otherlibs/systhreads/st_posix.h
+#	patch termios.c, cosmocc can not compile it
+	patch ocaml/otherlibs/unix/termios.c esperanto_termios.patch
 	printf "ocamlrun:\n\tcp $(OCAMLRUN) .\n" >> ocaml/runtime/Makefile
 	printf "ocamlrund:\n\tcp $(OCAMLRUND) .\n" >> ocaml/runtime/Makefile
 	printf "ocamlruni:\n\tcp $(OCAMLRUNI) .\n" >> ocaml/runtime/Makefile
@@ -123,7 +143,10 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 # would use the host system libm instead of the freestanding openlibm, see
 # https://github.com/mirage/ocaml-solo5/issues/101
 	chmod +x ocaml/configure
+# host=x86_64-linux-gnu can not be configured, cosmo actually use this compiler to compile
+# everything
 	cd ocaml && \
+		PATH="$(PATH):$(shell opam var bin)" \
 		CC="$(MAKECONF_CC)" \
 		OC_CFLAGS="$(OC_CFLAGS)" \
 		OCAMLC_CFLAGS="$(GLOBAL_CFLAGS)" \
@@ -136,8 +159,9 @@ ocaml/Makefile.config: ocaml/Makefile esperanto_sys.c
 		ac_cv_prog_DIRECT_LD="$(MAKECONF_LD)" \
 		ac_cv_lib_m_cos="no" \
 	  ./configure \
-		-host=$(MAKECONF_BUILD_ARCH)-unknown-none \
-		-prefix $(MAKECONF_PREFIX)/esperanto-sysroot \
+		-host=$(MAKECONF_ARCH)-cosmo-none \
+		-target=$(MAKECONF_BUILD_ARCH)-cosmo-none \
+		-prefix $(MAKECONF_PREFIX)/$(MAKECONF_BUILD_ARCH)-esperanto-sysroot \
 		-disable-shared\
 		-disable-instrumented-runtime\
 		-disable-ocamltest\
@@ -161,25 +185,24 @@ ocaml/runtime/caml/version.h: ocaml/Makefile.config
 endif
 
 ocaml: ocaml/Makefile.config ocaml/runtime/caml/version.h
-	$(MAKE) -C ocaml world
-	$(MAKE) -C ocaml opt
+	PATH="$(PATH):$(shell opam var bin)" $(MAKE) -C ocaml world
+	PATH="$(PATH):$(shell opam var bin)" $(MAKE) -C ocaml opt
 
 # CONFIGURATION FILES
-esperanto.conf: esperanto.conf.in
+$(MAKECONF_BUILD_ARCH)-esperanto.conf: esperanto.conf.in
 	sed -e 's!@@PREFIX@@!$(MAKECONF_PREFIX)!' \
-	    esperanto.conf.in > $@
+	    esperanto.conf.in > $@.sed
+	sed -e 's!@@BUILD_ARCH@@!$(MAKECONF_BUILD_ARCH)!g' \
+			$@.sed > $@.sed.sed
+	mv $@.sed.sed $@
 
 # COMMANDS
 install: all
-	MAKE=$(MAKE) PREFIX=$(MAKECONF_PREFIX) ./install.sh
-
-uninstall:
-	./uninstall.sh
+	MAKE=$(MAKE) PREFIX=$(MAKECONF_PREFIX) BUILD_ARCH=$(MAKECONF_BUILD_ARCH) ./install.sh
 
 clean:
 	$(RM) -r ocaml/
-	$(RM) esperanto.conf
-	$(RM) -r cosmopolitan
+	$(RM) $(BUILD_ARCH)-esperanto.conf
 
 distclean: clean
 	rm Makeconf

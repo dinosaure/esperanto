@@ -1,0 +1,9 @@
+(executable
+ (name extract)
+ (modules extract zip)
+ (libraries unix decompress.de digestif))
+
+(executable
+ (name install)
+ (modules install)
+ (libraries unix digestif))
