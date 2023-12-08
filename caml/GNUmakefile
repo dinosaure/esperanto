@@ -92,6 +92,9 @@ ocaml/Makefile.config: ocaml/Makefile ocaml/esperanto.h
 	patch ocaml/asmcomp/arm64/emit.mlp emit.mlp.aarch64.patch
 	patch ocaml/asmcomp/arm64/proc.ml proc.ml.aarch64.patch
 	patch ocaml/runtime/arm64.S arm64.S.patch
+# system() is defined by <stdio.h> instead of <stdlib.h>
+	sed -e 's/ac_cv_have_decl_system" "#include <stdlib.h>$$/ac_cv_have_decl_system" "#include <stdio.h>/' ocaml/configure > ocaml/configure.sed
+	mv ocaml/configure.sed ocaml/configure
 # externalize some functions needed by our [startup.o] into [sys.c] and [signals.c]
 # cat esperanto_sys.c >> ocaml/runtime/sys.c
 # cat esperanto_signals.c >> ocaml/runtime/signals.c
