@@ -1,5 +1,5 @@
-EXTRACT=opam exec -- dune exec ./extract.exe --
-INSTALL=opam exec -- dune exec ./install.exe --
+EXTRACT=opam exec -- dune exec --display=verbose ./extract.exe --
+INSTALL=opam exec -- dune exec --display=verbose ./install.exe --
 DISTRIBUTION=cosmocc.zip
 DIGEST=cosmocc.digest
 DST=cosmo
