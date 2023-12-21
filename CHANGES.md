@@ -1,3 +1,9 @@
+## v0.0.5 (2024-12-21) Paris - France
+
+- Support Cosmopolitan 3.1 (#43, @dinosaure)
+- Fix the compilation of esperanto with setup-ocaml and GitHub CI (#44, @dinosaure)
+- Extend the support of Esperanto to 4.13 (#45, @dinosaure)
+
 ## v0.0.4 (2023-05-25) Paris - France
 
 - Fix the compilation of `threads.cmxa` (@dinosaure, #38)
