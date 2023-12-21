@@ -18,7 +18,7 @@ jobs:
     - name: Fix binfmt and Cosmopolitan
       run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
     - name: Pinning packages
-      run: opam pin add -t -yn -vvv --kind=path .
+      run: opam pin add -t -yn -vvv --kind=path --with-version=dev .
     - name: Install cosmopolitan/esperanto and dune
       run: opam depext -iyt -v esperanto-cosmopolitan x86_64-esperanto aarch64-esperanto dune
     - name: Compiling example project (cat.com)
