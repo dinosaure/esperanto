@@ -9,11 +9,10 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     steps:
     - uses: actions/checkout@v2
-      with:
-        lfs: true
     - uses: ocaml/setup-ocaml@v2
       with:
         ocaml-compiler: ${{ matrix.ocaml-version }}
+        allow-prerelease-opam: true
 # See jart/cosmopolitan#3
     - name: Fix binfmt and Cosmopolitan
       run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
