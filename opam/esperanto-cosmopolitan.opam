@@ -22,4 +22,4 @@ depends: [
 ]
 synopsis: "Cosmopolitan toolchain for OCaml compiler"
 description: "A little toolchain for OCaml with Cosmopolitan"
-available: [ arch = "x86_64" & (os = "linux" | os = "freebsd" | os = "openbsd") ]
+available: [ opam-version >= "2.1.0" & arch = "x86_64" & (os = "linux" | os = "freebsd" | os = "openbsd") ]
