@@ -13,12 +13,13 @@ install: [
   [ make "-C" "toolchain" "PREFIX=%{prefix}%" "install" ]
 ]
 depends: [
+  "ocaml" {>= "4.13.0"}
   "dune"
-  "decompress"
+  "decompress" {>= "1.5.3"}
   "checkseum"
-  "digestif"
+  "digestif" {>= "1.0.0"}
 # "conf-binutils"
 ]
 synopsis: "Cosmopolitan toolchain for OCaml compiler"
 description: "A little toolchain for OCaml with Cosmopolitan"
-available: [ arch = "x86_64" & (os = "linux" | os = "freebsd" | os = "openbsd") ]
+available: [ opam-version >= "2.1.0" & arch = "x86_64" & (os = "linux" | os = "freebsd" | os = "openbsd") ]

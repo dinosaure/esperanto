@@ -121,10 +121,6 @@ type action =
   | Copy of { exec : bool; src : string; dst : string }
   | Link of { src : string; dst : string }
 
-let pp_lnk ppf = function
-  | Link { src; dst } -> Format.fprintf ppf "(Link (src:%S, dst:%S))" src dst
-  | _ -> ()
-
 let deps lnks =
   let tbl = Hashtbl.create 0x100 in
   let g = Hashtbl.create 0x100 in
