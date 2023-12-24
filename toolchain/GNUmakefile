@@ -1,7 +1,7 @@
 export TOPDIR := $(abspath .)
 
-EXTRACT=opam exec -- dune exec --root=${TOPDIR} --display=verbose ./extract.exe --
-INSTALL=opam exec -- dune exec --root=${TOPDIR} --display=verbose ./install.exe --
+EXTRACT=dune exec --root=${TOPDIR} --display=verbose ./extract.exe --
+INSTALL=dune exec --root=${TOPDIR} --display=verbose ./install.exe --
 DISTRIBUTION=cosmocc.zip
 DIGEST=cosmocc.digest
 DST=cosmo
@@ -29,7 +29,7 @@ install: ${COSMOCC} ${OBJS}
 	@${INSTALL} -d ${DST} --digest ${DIGEST} --prefix "${PREFIX}"
 
 clean:
-	opam exec -- dune clean
+	dune clean
 	rm -rf ${DST}
 	rm -rf ${OBJS}
 
