@@ -145,9 +145,14 @@ ocaml/Makefile.config: ocaml/Makefile ocaml/esperanto.h
 	chmod +x ocaml/configure
 # host=x86_64-linux-gnu can not be configured, cosmo actually use this compiler to compile
 # everything
+# NOTE: we added --enable-imprecise-c99-float-ops to be able to compile OCaml with Cosmopolitan
+# TODO: but we should look why OCaml can not recognize float operations via cosmopolitan
+# NOTE: we added -Wno-int-conversion to let ./configure to try the existence of some functions
+# regardless the cast from a function to an integer
 	cd ocaml && \
 		PATH="$(PATH):$(shell opam var bin)" \
 		CC="$(MAKECONF_CC)" \
+		CFLAGS="-Wno-int-conversion" \
 		OC_CFLAGS="$(OC_CFLAGS)" \
 		OCAMLC_CFLAGS="$(GLOBAL_CFLAGS)" \
 		AS="$(MAKECONF_AS)" \
@@ -159,6 +164,7 @@ ocaml/Makefile.config: ocaml/Makefile ocaml/esperanto.h
 		ac_cv_prog_DIRECT_LD="$(MAKECONF_LD)" \
 		ac_cv_lib_m_cos="no" \
 	  ./configure \
+	  --enable-imprecise-c99-float-ops \
 		-host=$(MAKECONF_ARCH)-cosmo-none \
 		-target=$(MAKECONF_BUILD_ARCH)-cosmo-none \
 		-prefix $(MAKECONF_PREFIX)/$(MAKECONF_BUILD_ARCH)-esperanto-sysroot \
