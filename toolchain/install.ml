@@ -2,6 +2,7 @@ module Digest = Digestif.SHA256
 
 let ( / ) = Filename.concat
 let () = assert (Filename.dir_sep = "/")
+let () = Printexc.record_backtrace true
 let pr fmt = Format.printf fmt
 let failwith fmt = Format.kasprintf failwith fmt
 let invalid_arg fmt = Format.kasprintf invalid_arg fmt

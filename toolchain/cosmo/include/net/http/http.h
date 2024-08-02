@@ -1,27 +1,19 @@
 #ifndef COSMOPOLITAN_LIBC_HTTP_HTTP_H_
 #define COSMOPOLITAN_LIBC_HTTP_HTTP_H_
-#include "libc/time/struct/tm.h"
+#include "libc/serialize.h"
+#include "libc/time.h"
 
 #define kHttpRequest  0
 #define kHttpResponse 1
 
-#define kHttpGet     1
-#define kHttpHead    2
-#define kHttpPost    3
-#define kHttpPut     4
-#define kHttpDelete  5
-#define kHttpOptions 6
-#define kHttpConnect 7
-#define kHttpTrace   8
-#define kHttpCopy    9
-#define kHttpLock    10
-#define kHttpMerge   11
-#define kHttpMkcol   12
-#define kHttpMove    13
-#define kHttpNotify  14
-#define kHttpPatch   15
-#define kHttpReport  16
-#define kHttpUnlock  17
+#define kHttpGet     READ32LE("GET")
+#define kHttpHead    READ32LE("HEAD")
+#define kHttpPost    READ32LE("POST")
+#define kHttpPut     READ32LE("PUT")
+#define kHttpDelete  READ64LE("DELETE\0")
+#define kHttpOptions READ64LE("OPTIONS")
+#define kHttpConnect READ64LE("CONNECT")
+#define kHttpTrace   READ64LE("TRACE\0\0")
 
 #define kHttpStateStart   0
 #define kHttpStateMethod  1
@@ -168,14 +160,13 @@ struct HttpMessage {
   int i, a, status;
   unsigned char t;
   unsigned char type;
-  unsigned char method;
   unsigned char version;
+  uint64_t method;
   struct HttpSlice k;
   struct HttpSlice uri;
   struct HttpSlice scratch;
   struct HttpSlice message;
   struct HttpSlice headers[kHttpHeadersMax];
-  struct HttpSlice xmethod;
   struct HttpHeaders xheaders;
 };
 
@@ -187,33 +178,35 @@ struct HttpUnchunker {
 };
 
 extern const char kHttpToken[256];
-extern const char kHttpMethod[18][8];
 extern const bool kHttpRepeatable[kHttpHeadersMax];
 
-const char *GetHttpReason(int);
-const char *GetHttpHeaderName(int);
-int GetHttpHeader(const char *, size_t);
-int GetHttpMethod(const char *, size_t);
-void InitHttpMessage(struct HttpMessage *, int);
-void DestroyHttpMessage(struct HttpMessage *);
-int ParseHttpMessage(struct HttpMessage *, const char *, size_t);
-bool HeaderHas(struct HttpMessage *, const char *, int, const char *, size_t);
-int64_t ParseContentLength(const char *, size_t);
-char *FormatHttpDateTime(char[hasatleast 30], struct tm *);
-bool ParseHttpRange(const char *, size_t, long, long *, long *);
-int64_t ParseHttpDateTime(const char *, size_t);
-bool IsValidHttpToken(const char *, size_t);
-bool IsValidCookieValue(const char *, size_t);
-bool IsAcceptablePath(const char *, size_t);
-bool IsAcceptableHost(const char *, size_t);
-bool IsAcceptablePort(const char *, size_t);
-bool IsReasonablePath(const char *, size_t);
-int ParseForwarded(const char *, size_t, uint32_t *, uint16_t *);
-bool IsMimeType(const char *, size_t, const char *);
-ssize_t Unchunk(struct HttpUnchunker *, char *, size_t, size_t *);
-const char *FindContentType(const char *, size_t);
-bool IsNoCompressExt(const char *, size_t);
-char *FoldHeader(struct HttpMessage *, const char *, int, size_t *);
+const char *GetHttpReason(int) libcesque;
+const char *GetHttpHeaderName(int) libcesque;
+int GetHttpHeader(const char *, size_t) libcesque;
+void InitHttpMessage(struct HttpMessage *, int) libcesque;
+void DestroyHttpMessage(struct HttpMessage *) libcesque;
+void ResetHttpMessage(struct HttpMessage *, int) libcesque;
+int ParseHttpMessage(struct HttpMessage *, const char *, size_t,
+                     size_t) libcesque;
+bool HeaderHas(struct HttpMessage *, const char *, int, const char *,
+               size_t) libcesque;
+int64_t ParseContentLength(const char *, size_t) libcesque;
+char *FormatHttpDateTime(char[hasatleast 30], struct tm *) libcesque;
+bool ParseHttpRange(const char *, size_t, long, long *, long *) libcesque;
+int64_t ParseHttpDateTime(const char *, size_t) libcesque;
+uint64_t ParseHttpMethod(const char *, size_t) libcesque;
+bool IsValidHttpToken(const char *, size_t) libcesque;
+bool IsValidCookieValue(const char *, size_t) libcesque;
+bool IsAcceptablePath(const char *, size_t) libcesque;
+bool IsAcceptableHost(const char *, size_t) libcesque;
+bool IsAcceptablePort(const char *, size_t) libcesque;
+bool IsReasonablePath(const char *, size_t) libcesque;
+int ParseForwarded(const char *, size_t, uint32_t *, uint16_t *) libcesque;
+bool IsMimeType(const char *, size_t, const char *) libcesque;
+ssize_t Unchunk(struct HttpUnchunker *, char *, size_t, size_t *) libcesque;
+const char *FindContentType(const char *, size_t) libcesque;
+bool IsNoCompressExt(const char *, size_t) libcesque;
+char *FoldHeader(struct HttpMessage *, const char *, int, size_t *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_HTTP_HTTP_H_ */

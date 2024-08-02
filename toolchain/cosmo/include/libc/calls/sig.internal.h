@@ -17,11 +17,12 @@ extern struct Signals __sig;
 
 bool __sig_ignored(int);
 int __sig_check(void);
+int __sig_crash_sig(unsigned, int *);
+int __sig_get(sigset_t);
 int __sig_kill(struct PosixThread *, int, int);
 int __sig_mask(int, const sigset_t *, sigset_t *);
-int __sig_relay(int, int, sigset_t);
 int __sig_raise(int, int);
-int __sig_get(sigset_t);
+int __sig_relay(int, int, sigset_t);
 void __sig_delete(int);
 void __sig_generate(int, int);
 void __sig_init(void);

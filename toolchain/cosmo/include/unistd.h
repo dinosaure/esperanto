@@ -9,13 +9,9 @@
 #include "libc/sysv/consts/fileno.h"
 #include "libc/sysv/consts/o.h"
 #include "libc/sysv/consts/ok.h"
-#include "libc/time/time.h"
+#include "libc/time.h"
+#include "libc/unistd.h"
 #include "third_party/getopt/long1.h"
 #include "third_party/musl/crypt.h"
 #include "third_party/musl/lockf.h"
-
-#ifndef _CS_PATH
-#define _CS_PATH 0
-#endif
-
 #endif /* _UNISTD_H */

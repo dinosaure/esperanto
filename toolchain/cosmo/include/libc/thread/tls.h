@@ -15,6 +15,7 @@ struct CosmoFtrace {   /* 16 */
   int64_t ft_lastaddr; /*  8 */
 };
 
+/* cosmopolitan thread information block (512 bytes) */
 /* NOTE: update aarch64 libc/errno.h if sizeof changes */
 /* NOTE: update aarch64 libc/proc/vfork.S if sizeof changes */
 /* NOTE: update aarch64 libc/nexgen32e/gc.S if sizeof changes */
@@ -36,16 +37,17 @@ struct CosmoTib {
   char *tib_sigstack_addr;
   uint32_t tib_sigstack_size;
   uint32_t tib_sigstack_flags;
-  void **tib_keys;
   void *tib_nsync;
-  void *tib_todo[7];
-};
+  void *tib_atexit;
+  _Atomic(void *) tib_keys[46];
+} __attribute__((__aligned__(64)));
 
 extern int __threaded;
+extern char __tls_morphed;
 extern unsigned __tls_index;
 
-char *_mktls(struct CosmoTib **);
-void __bootstrap_tls(struct CosmoTib *, char *);
+char *_mktls(struct CosmoTib **) libcesque;
+void __bootstrap_tls(struct CosmoTib *, char *) libcesque;
 
 #ifdef __x86_64__
 extern char __tls_enabled;
@@ -57,19 +59,19 @@ extern char __tls_enabled;
 #error "unsupported architecture"
 #endif
 
-void __set_tls(struct CosmoTib *);
+void __set_tls(struct CosmoTib *) libcesque;
 
 /**
  * Returns location of thread information block.
  *
  * This can't be used in privileged functions.
  */
-__funline pureconst struct CosmoTib *__get_tls(void) {
+forceinline pureconst struct CosmoTib *__get_tls(void) {
 #ifdef __chibicc__
   return 0;
 #elif __x86_64__
   struct CosmoTib *__tib;
-  __asm__("mov\t%%fs:0,%0" : "=r"(__tib));
+  __asm__("mov\t%%gs:0x30,%0" : "=r"(__tib));
   return __tib;
 #elif defined(__aarch64__)
   register struct CosmoTib *__tls __asm__("x28");

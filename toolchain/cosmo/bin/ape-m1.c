@@ -1,5 +1,5 @@
 /*-*- mode:c;indent-tabs-mode:nil;c-basic-offset:2;tab-width:8;coding:utf-8 -*-│
-│vi: set net ft=c ts=2 sts=2 sw=2 fenc=utf-8                                :vi│
+│ vi: set et ft=c ts=2 sts=2 sw=2 fenc=utf-8                               :vi │
 ╞══════════════════════════════════════════════════════════════════════════════╡
 │ Copyright 2021 Justine Alexandra Roberts Tunney                              │
 │                                                                              │
@@ -16,6 +16,7 @@
 │ TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR             │
 │ PERFORMANCE OF THIS SOFTWARE.                                                │
 ╚─────────────────────────────────────────────────────────────────────────────*/
+#include <assert.h>
 #include <dispatch/dispatch.h>
 #include <dlfcn.h>
 #include <errno.h>
@@ -30,13 +31,17 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/random.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <time.h>
 #include <unistd.h>
 
-#define pagesz         16384
+#define pagesz 16384
+/* maximum path size that cosmo can take */
+#define PATHSIZE       (PATH_MAX < 1024 ? PATH_MAX : 1024)
 #define SYSLIB_MAGIC   ('s' | 'l' << 8 | 'i' << 16 | 'b' << 24)
-#define SYSLIB_VERSION 8
+#define SYSLIB_VERSION 10 /* sync with libc/runtime/syslib.internal.h */
 
 struct Syslib {
   int magic;
@@ -93,43 +98,58 @@ struct Syslib {
   long (*sem_trywait)(int *);
   long (*getrlimit)(int, struct rlimit *);
   long (*setrlimit)(int, const struct rlimit *);
-  // v6 (2023-11-03)
+  /* v6 (2023-11-03) */
   void *(*dlopen)(const char *, int);
   void *(*dlsym)(void *, const char *);
   int (*dlclose)(void *);
   char *(*dlerror)(void);
+  /* MANDATORY (cosmo runtime won't load if version < 8)
+     ---------------------------------------------------
+     OPTIONAL (cosmo lib should check __syslib->version) */
+  /* v9 (2024-01-31) */
+  int (*pthread_cpu_number_np)(size_t *);
+  /* v10 (2024-05-02) */
+  long (*sysctl)(int *, u_int, void *, size_t *, void *, size_t);
+  long (*sysctlbyname)(const char *, void *, size_t *, void *, size_t);
+  long (*sysctlnametomib)(const char *, int *, size_t *);
 };
 
-#define ELFCLASS32  1
-#define ELFDATA2LSB 1
-#define EM_AARCH64  183
-#define ET_EXEC     2
-#define ET_DYN      3
-#define PT_LOAD     1
-#define PT_DYNAMIC  2
-#define PT_INTERP   3
-#define EI_CLASS    4
-#define EI_DATA     5
-#define PF_X        1
-#define PF_W        2
-#define PF_R        4
-#define AT_PHDR     3
-#define AT_PHENT    4
-#define AT_PHNUM    5
-#define AT_PAGESZ   6
-#define AT_BASE     7
-#define AT_ENTRY    9
-#define AT_UID      11
-#define AT_EUID     12
-#define AT_GID      13
-#define AT_EGID     14
-#define AT_HWCAP    16
-#define AT_HWCAP2   16
-#define AT_SECURE   23
-#define AT_RANDOM   25
-#define AT_EXECFN   31
+#define ELFCLASS32                  1
+#define ELFDATA2LSB                 1
+#define EM_AARCH64                  183
+#define ET_EXEC                     2
+#define ET_DYN                      3
+#define PT_LOAD                     1
+#define PT_DYNAMIC                  2
+#define PT_INTERP                   3
+#define EI_CLASS                    4
+#define EI_DATA                     5
+#define PF_X                        1
+#define PF_W                        2
+#define PF_R                        4
+#define AT_PHDR                     3
+#define AT_PHENT                    4
+#define AT_PHNUM                    5
+#define AT_PAGESZ                   6
+#define AT_BASE                     7
+#define AT_FLAGS                    8
+#define AT_FLAGS_PRESERVE_ARGV0_BIT 0
+#define AT_FLAGS_PRESERVE_ARGV0     (1 << AT_FLAGS_PRESERVE_ARGV0_BIT)
+#define AT_ENTRY                    9
+#define AT_UID                      11
+#define AT_EUID                     12
+#define AT_GID                      13
+#define AT_EGID                     14
+#define AT_HWCAP                    16
+#define AT_HWCAP2                   16
+#define AT_SECURE                   23
+#define AT_RANDOM                   25
+#define AT_EXECFN                   31
 
-#define AUXV_WORDS 29
+#define EF_APE_MODERN      0x101ca75
+#define EF_APE_MODERN_MASK 0x1ffffff
+
+#define AUXV_WORDS 31
 
 /* from the xnu codebase */
 #define _COMM_PAGE_START_ADDRESS      0x0000000FFFFFC000ul
@@ -137,8 +157,8 @@ struct Syslib {
 #define _COMM_PAGE_APRR_WRITE_ENABLE  (_COMM_PAGE_START_ADDRESS + 0x110)
 #define _COMM_PAGE_APRR_WRITE_DISABLE (_COMM_PAGE_START_ADDRESS + 0x118)
 
-#define MIN(X, Y) ((Y) > (X) ? (X) : (Y))
-#define MAX(X, Y) ((Y) < (X) ? (X) : (Y))
+#define Min(X, Y) ((Y) > (X) ? (X) : (Y))
+#define Max(X, Y) ((Y) < (X) ? (X) : (Y))
 
 #define READ32(S)                                                      \
   ((unsigned)(255 & (S)[3]) << 030 | (unsigned)(255 & (S)[2]) << 020 | \
@@ -194,10 +214,11 @@ union ElfPhdrBuf {
 
 struct PathSearcher {
   int literally;
+  int indirect;
   unsigned long namelen;
   const char *name;
   const char *syspath;
-  char path[1024];
+  char path[PATHSIZE];
 };
 
 struct ApeLoader {
@@ -209,27 +230,21 @@ struct ApeLoader {
 
 static unsigned long StrLen(const char *s) {
   unsigned long n = 0;
-  while (*s++) ++n;
+  while (*s++)
+    ++n;
   return n;
 }
 
 static int StrCmp(const char *l, const char *r) {
   unsigned long i = 0;
-  while (l[i] == r[i] && r[i]) ++i;
+  while (l[i] == r[i] && r[i])
+    ++i;
   return (l[i] & 255) - (r[i] & 255);
 }
 
 static const char *BaseName(const char *s) {
-  int c;
-  const char *b = "";
-  if (s) {
-    while ((c = *s++)) {
-      if (c == '/') {
-        b = s;
-      }
-    }
-  }
-  return b;
+  const char *b = strrchr(s, '/');
+  return b ? b + 1 : s;
 }
 
 static char *GetEnv(char **p, const char *s) {
@@ -272,7 +287,8 @@ static char *Utoa(char p[21], unsigned long x) {
 }
 
 static char *Itoa(char p[21], long x) {
-  if (x < 0) *p++ = '-', x = -(unsigned long)x;
+  if (x < 0)
+    *p++ = '-', x = -(unsigned long)x;
   return Utoa(p, x);
 }
 
@@ -297,10 +313,19 @@ static long Print(int fd, const char *s, ...) {
   return write(fd, b, n);
 }
 
+static int GetIndirectOffset(const char *arg0) {
+  char *tail = strrchr(arg0, '.');
+  if (tail && !StrCmp(tail + 1, "ape")) {
+    return tail - arg0;
+  }
+  return 0;
+}
+
 static void Perror(const char *thing, long rc, const char *reason) {
   char ibuf[21];
   ibuf[0] = 0;
-  if (rc) Itoa(ibuf, -rc);
+  if (rc)
+    Itoa(ibuf, -rc);
   Print(2, "ape error: ", thing, ": ", reason, rc ? " failed w/ errno " : "",
         ibuf, "\n", 0l);
 }
@@ -312,8 +337,11 @@ __attribute__((__noreturn__)) static void Pexit(const char *c, int failed,
 }
 
 static char AccessCommand(struct PathSearcher *ps, unsigned long pathlen) {
-  if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) return 0;
-  if (pathlen && ps->path[pathlen - 1] != '/') ps->path[pathlen++] = '/';
+  if (pathlen + 1 + ps->namelen + 1 > sizeof(ps->path)) {
+    return 0;
+  }
+  if (pathlen && ps->path[pathlen - 1] != '/')
+    ps->path[pathlen++] = '/';
   memmove(ps->path + pathlen, ps->name, ps->namelen);
   ps->path[pathlen + ps->namelen] = 0;
   return !access(ps->path, X_OK);
@@ -342,12 +370,8 @@ static char FindCommand(struct PathSearcher *ps) {
   ps->path[0] = 0;
 
   /* paths are always 100% taken literally when a slash exists
-       $ ape foo/bar.com arg1 arg2 */
-  if (memchr(ps->name, '/', ps->namelen)) {
-    return AccessCommand(ps, 0);
-  }
-
-  /* we don't run files in the current directory
+       $ ape foo/bar.com arg1 arg2
+     we don't run files in the current directory
        $ ape foo.com arg1 arg2
      unless $PATH has an empty string entry, e.g.
        $ expert PATH=":/bin"
@@ -355,8 +379,8 @@ static char FindCommand(struct PathSearcher *ps) {
      however we will execute this
        $ ape - foo.com foo.com arg1 arg2
      because cosmo's execve needs it */
-  if (ps->literally && AccessCommand(ps, 0)) {
-    return 1;
+  if (ps->literally || memchr(ps->name, '/', ps->namelen)) {
+    return AccessCommand(ps, 0);
   }
 
   /* otherwise search for name on $PATH */
@@ -366,8 +390,11 @@ static char FindCommand(struct PathSearcher *ps) {
 static char *Commandv(struct PathSearcher *ps, const char *name,
                       const char *syspath) {
   ps->syspath = syspath ? syspath : "/bin:/usr/local/bin:/usr/bin";
-  if (!(ps->namelen = StrLen((ps->name = name)))) return 0;
-  if (ps->namelen + 1 > sizeof(ps->path)) return 0;
+  ps->name = name;
+  if (!(ps->namelen = ps->indirect ? ps->indirect : StrLen(ps->name)))
+    return 0;
+  if (ps->namelen + 1 > sizeof(ps->path))
+    return 0;
   if (FindCommand(ps)) {
     return ps->path;
   } else {
@@ -534,10 +561,25 @@ static long sys_pselect(int nfds, fd_set *readfds, fd_set *writefds,
   return sysret(pselect(nfds, readfds, writefds, errorfds, timeout, sigmask));
 }
 
+static long sys_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
+                       void *newp, size_t newlen) {
+  return sysret(sysctl(name, namelen, oldp, oldlenp, newp, newlen));
+}
+
+static long sys_sysctlbyname(const char *name, void *oldp, size_t *oldlenp,
+                             void *newp, size_t newlen) {
+  return sysret(sysctlbyname(name, oldp, oldlenp, newp, newlen));
+}
+
+static long sys_sysctlnametomib(const char *name, int *mibp, size_t *sizep) {
+  return sysret(sysctlnametomib(name, mibp, sizep));
+}
+
 __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
                                                 long *sp, struct ElfEhdr *e,
                                                 struct ElfPhdr *p,
-                                                struct Syslib *lib) {
+                                                struct Syslib *lib,
+                                                char *path) {
   long rc;
   int prot;
   int flags;
@@ -573,10 +615,11 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
     a = p[i].p_vaddr & -pagesz;
     b = (p[i].p_vaddr + p[i].p_memsz + (pagesz - 1)) & -pagesz;
     for (j = i + 1; j < e->e_phnum; ++j) {
-      if (p[j].p_type != PT_LOAD) continue;
+      if (p[j].p_type != PT_LOAD)
+        continue;
       c = p[j].p_vaddr & -pagesz;
       d = (p[j].p_vaddr + p[j].p_memsz + (pagesz - 1)) & -pagesz;
-      if (MAX(a, c) < MIN(b, d)) {
+      if (Max(a, c) < Min(b, d)) {
         Pexit(exe, 0, "ELF segments overlap each others virtual memory");
       }
     }
@@ -602,7 +645,8 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   if (e->e_type == ET_DYN) {
     rc = sys_mmap(0, virtmax - virtmin, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS,
                   -1, 0);
-    if (rc < 0) Pexit(exe, rc, "pie mmap");
+    if (rc < 0)
+      Pexit(exe, rc, "pie mmap");
     dynbase = rc;
     if (dynbase & (pagesz - 1)) {
       Pexit(exe, 0, "OS mmap incongruent w/ AT_PAGESZ");
@@ -618,14 +662,18 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   for (i = 0; i < e->e_phnum; ++i) {
     void *addr;
     unsigned long size;
-    if (p[i].p_type != PT_LOAD) continue;
+    if (p[i].p_type != PT_LOAD)
+      continue;
 
     /* configure mapping */
     prot = 0;
     flags = MAP_FIXED | MAP_PRIVATE;
-    if (p[i].p_flags & PF_R) prot |= PROT_READ;
-    if (p[i].p_flags & PF_W) prot |= PROT_WRITE;
-    if (p[i].p_flags & PF_X) prot |= PROT_EXEC;
+    if (p[i].p_flags & PF_R)
+      prot |= PROT_READ;
+    if (p[i].p_flags & PF_W)
+      prot |= PROT_WRITE;
+    if (p[i].p_flags & PF_X)
+      prot |= PROT_EXEC;
 
     /* load from file */
     if (p[i].p_filesz) {
@@ -645,7 +693,7 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
       a = p[i].p_vaddr + p[i].p_filesz; /* end of file content */
       b = (a + (pagesz - 1)) & -pagesz; /* first pure bss page */
       c = p[i].p_vaddr + p[i].p_memsz;  /* end of segment data */
-      wipe = MIN(b - a, c - a);
+      wipe = Min(b - a, c - a);
       if (wipe && (~prot1 & PROT_WRITE)) {
         prot1 = PROT_READ | PROT_WRITE;
       }
@@ -653,9 +701,9 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
       size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_filesz;
       if (prot1 & PROT_EXEC) {
 #ifdef SIP_DISABLED
-        // if sip is disabled then we can load the executable segments
-        // off the binary into memory without needing to copy anything
-        // which provides considerably better performance for building
+        /* if sip is disabled then we can load the executable segments
+           off the binary into memory without needing to copy anything
+           which provides considerably better performance for building */
         rc = sys_mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
         if (rc < 0) {
           if (rc == -EPERM) {
@@ -667,32 +715,38 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
           }
         }
 #else
-        // the issue is that if sip is enabled then, attempting to map
-        // it with exec permission will cause xnu to phone home a hash
-        // of the entire file to apple intelligence as a one time cost
-        // which is literally minutes for executables holding big data
-        // since there's no public apple api for detecting sip we read
-        // as the default strategy which is slow but it works for both
+        /* the issue is that if sip is enabled then, attempting to map
+           it with exec permission will cause xnu to phone home a hash
+           of the entire file to apple intelligence as a one time cost
+           which is literally minutes for executables holding big data
+           since there's no public apple api for detecting sip we read
+           as the default strategy which is slow but it works for both */
         rc = sys_mmap(addr, size, (prot1 = PROT_READ | PROT_WRITE),
                       MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS, -1, 0);
-        if (rc < 0) Pexit(exe, rc, "prog mmap anon");
+        if (rc < 0)
+          Pexit(exe, rc, "prog mmap anon");
         rc = pread(fd, addr, p[i].p_filesz, p[i].p_offset & -pagesz);
-        if (rc != p[i].p_filesz) Pexit(exe, -errno, "prog pread");
+        if (rc != p[i].p_filesz)
+          Pexit(exe, -errno, "prog pread");
 #endif
       } else {
         rc = sys_mmap(addr, size, prot1, flags, fd, p[i].p_offset & -pagesz);
-        if (rc < 0) Pexit(exe, rc, "prog mmap");
+        if (rc < 0)
+          Pexit(exe, rc, "prog mmap");
       }
-      if (wipe) memset((void *)(dynbase + a), 0, wipe);
+      if (wipe)
+        memset((void *)(dynbase + a), 0, wipe);
       if (prot2 != prot1) {
         rc = sys_mprotect(addr, size, prot2);
-        if (rc < 0) Pexit(exe, rc, "prog mprotect");
+        if (rc < 0)
+          Pexit(exe, rc, "prog mprotect");
       }
       /* allocate extra bss */
       if (c > b) {
         flags |= MAP_ANONYMOUS;
         rc = sys_mmap((void *)(dynbase + b), c - b, prot, flags, -1, 0);
-        if (rc < 0) Pexit(exe, rc, "extra bss mmap");
+        if (rc < 0)
+          Pexit(exe, rc, "extra bss mmap");
       }
     } else {
       /* allocate pure bss */
@@ -700,7 +754,8 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
       size = (p[i].p_vaddr & (pagesz - 1)) + p[i].p_memsz;
       flags |= MAP_ANONYMOUS;
       rc = sys_mmap(addr, size, prot, flags, -1, 0);
-      if (rc < 0) Pexit(exe, rc, "bss mmap");
+      if (rc < 0)
+        Pexit(exe, rc, "bss mmap");
     }
   }
 
@@ -708,11 +763,11 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
   close(fd);
 
   register long *x0 __asm__("x0") = sp;
+  register char *x2 __asm__("x2") = path;
+  register int x3 __asm__("x3") = 8; /* _HOSTXNU */
   register struct Syslib *x15 __asm__("x15") = lib;
   register long x16 __asm__("x16") = e->e_entry;
   __asm__ volatile("mov\tx1,#0\n\t"
-                   "mov\tx2,#0\n\t"
-                   "mov\tx3,#0\n\t"
                    "mov\tx4,#0\n\t"
                    "mov\tx5,#0\n\t"
                    "mov\tx6,#0\n\t"
@@ -741,13 +796,13 @@ __attribute__((__noreturn__)) static void Spawn(const char *exe, int fd,
                    "mov\tx0,#0\n\t"
                    "br\tx16"
                    : /* no outputs */
-                   : "r"(x0), "r"(x15), "r"(x16)
+                   : "r"(x0), "r"(x2), "r"(x3), "r"(x15), "r"(x16)
                    : "memory");
   __builtin_unreachable();
 }
 
 static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
-                          const char *exe, int fd, long *sp, long *auxv,
+                          char *exe, int fd, long *sp, long *auxv,
                           char *execfn) {
   long i, rc;
   unsigned size;
@@ -768,6 +823,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   if (e->e_machine != EM_AARCH64) {
     return "couldn't find ELF header with ARM64 machine type";
   }
+  if ((e->e_flags & EF_APE_MODERN_MASK) != EF_APE_MODERN && sp[0] > 0) {
+    /* change argv[0] to resolved path for older binaries */
+    ((char **)(sp + 1))[0] = exe;
+  }
   if (e->e_phentsize != sizeof(struct ElfPhdr)) {
     Pexit(exe, 0, "e_phentsize is wrong");
   }
@@ -778,8 +837,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
 
   /* read program headers */
   rc = pread(fd, M->phdr.buf, size, ebuf->ehdr.e_phoff);
-  if (rc < 0) return "failed to read ELF program headers";
-  if (rc != size) return "truncated read of ELF program headers";
+  if (rc < 0)
+    return "failed to read ELF program headers";
+  if (rc != size)
+    return "truncated read of ELF program headers";
 
   /* bail on recoverable program header errors */
   p = &M->phdr.phdr;
@@ -805,12 +866,10 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
     }
   }
 
-  /*
-   * merge adjacent loads that are contiguous with equal protection,
-   * which prevents our program header overlap check from needlessly
-   * failing later on; it also shaves away a microsecond of latency,
-   * since every program header requires invoking at least 1 syscall
-   */
+  /* merge adjacent loads that are contiguous with equal protection,
+     which prevents our program header overlap check from needlessly
+     failing later on; it also shaves away a microsecond of latency,
+     since every program header requires invoking at least 1 syscall */
   for (i = 0; i + 1 < e->e_phnum;) {
     if (p[i].p_type == PT_LOAD && p[i + 1].p_type == PT_LOAD &&
         ((p[i].p_flags & (PF_R | PF_W | PF_X)) ==
@@ -844,28 +903,30 @@ static const char *TryElf(struct ApeLoader *M, union ElfEhdrBuf *ebuf,
   auxv[7] = ebuf->ehdr.e_entry;
   auxv[8] = AT_PAGESZ;
   auxv[9] = pagesz;
-  auxv[10] = AT_UID;
-  auxv[11] = getuid();
-  auxv[12] = AT_EUID;
-  auxv[13] = geteuid();
-  auxv[14] = AT_GID;
-  auxv[15] = getgid();
-  auxv[16] = AT_EGID;
-  auxv[17] = getegid();
-  auxv[18] = AT_HWCAP;
-  auxv[19] = 0xffb3ffffu;
-  auxv[20] = AT_HWCAP2;
-  auxv[21] = 0x181;
-  auxv[22] = AT_SECURE;
-  auxv[23] = issetugid();
-  auxv[24] = AT_RANDOM;
-  auxv[25] = (long)M->rando;
-  auxv[26] = AT_EXECFN;
-  auxv[27] = (long)execfn;
-  auxv[28] = 0;
+  auxv[10] = AT_FLAGS;
+  auxv[11] = M->ps.literally ? AT_FLAGS_PRESERVE_ARGV0 : 0;
+  auxv[12] = AT_UID;
+  auxv[13] = getuid();
+  auxv[14] = AT_EUID;
+  auxv[15] = geteuid();
+  auxv[16] = AT_GID;
+  auxv[17] = getgid();
+  auxv[18] = AT_EGID;
+  auxv[19] = getegid();
+  auxv[20] = AT_HWCAP;
+  auxv[21] = 0xffb3ffffu;
+  auxv[22] = AT_HWCAP2;
+  auxv[23] = 0x181;
+  auxv[24] = AT_SECURE;
+  auxv[25] = issetugid();
+  auxv[26] = AT_RANDOM;
+  auxv[27] = (long)M->rando;
+  auxv[28] = AT_EXECFN;
+  auxv[29] = (long)execfn;
+  auxv[30] = 0;
 
   /* we're now ready to load */
-  Spawn(exe, fd, sp, e, p, &M->lib);
+  Spawn(exe, fd, sp, e, p, &M->lib, M->ps.path);
 }
 
 int main(int argc, char **argv, char **envp) {
@@ -935,13 +996,21 @@ int main(int argc, char **argv, char **envp) {
   M->lib.dlsym = dlsym;
   M->lib.dlclose = dlclose;
   M->lib.dlerror = dlerror;
+  M->lib.pthread_cpu_number_np = pthread_cpu_number_np;
+  M->lib.sysctl = sys_sysctl;
+  M->lib.sysctlbyname = sys_sysctlbyname;
+  M->lib.sysctlnametomib = sys_sysctlnametomib;
 
   /* getenv("_") is close enough to at_execfn */
-  execfn = argc > 0 ? argv[0] : 0;
+  execfn = 0;
   for (i = 0; envp[i]; ++i) {
     if (envp[i][0] == '_' && envp[i][1] == '=') {
       execfn = envp[i] + 2;
     }
+  }
+  prog = GetEnv(envp + i + 1, "executable_path");
+  if (!execfn) {
+    execfn = prog;
   }
 
   /* sneak the system five abi back out of args */
@@ -953,18 +1022,32 @@ int main(int argc, char **argv, char **envp) {
      grows down the alloc by poking the guard pages */
   n = (auxv - sp + AUXV_WORDS + 1) * sizeof(long);
   sp2 = (long *)__builtin_alloca(n);
-  if ((long)sp2 & 15) ++sp2;
+  if ((long)sp2 & 15)
+    ++sp2;
   for (; n > 0; n -= pagesz) {
     ((char *)sp2)[n - 1] = 0;
   }
   memmove(sp2, sp, (auxv - sp) * sizeof(long));
   argv = (char **)(sp2 + 1);
   envp = (char **)(sp2 + 1 + argc + 1);
-  auxv = sp2 + (auxv - sp);
+  auxv = (long *)(envp + i + 1);
   sp = sp2;
 
   /* interpret command line arguments */
-  if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
+  if ((M->ps.indirect = GetIndirectOffset(prog))) {
+    /* if called as $prog.ape, then strip off the .ape and run the
+       $prog. This allows you to use symlinks to trick the OS when
+       a native executable is required. For example, let's say you
+       want to use the APE binary /opt/cosmos/bin/bash as a system
+       shell in /etc/shells, or perhaps in shebang lines like e.g.
+       `#!/opt/cosmos/bin/bash`. That won't work with APE normally,
+       but it will if you say:
+           ln -sf /usr/local/bin/ape /opt/cosmos/bin/bash.ape
+       and then use #!/opt/cosmos/bin/bash.ape instead. */
+    M->ps.literally = 1;
+    argc = sp[0];
+    argv = (char **)(sp + 1);
+  } else if ((M->ps.literally = argc >= 3 && !StrCmp(argv[1], "-"))) {
     /* if the first argument is a hyphen then we give the user the
        power to change argv[0] or omit it entirely. most operating
        systems don't permit the omission of argv[0] but we do, b/c
@@ -975,8 +1058,9 @@ int main(int argc, char **argv, char **envp) {
   } else if (argc < 2) {
     Emit("usage: ape   PROG [ARGV1,ARGV2,...]\n"
          "       ape - PROG [ARGV0,ARGV1,...]\n"
-         "actually portable executable loader silicon 1.9\n"
-         "copyright 2023 justine alexandra roberts tunney\n"
+         "         PROG.ape [ARGV1,ARGV2,...]\n"
+         "actually portable executable loader silicon 1.10\n"
+         "copyrights 2023 justine alexandra roberts tunney\n"
          "https://justine.lol/ape.html\n");
     _exit(1);
   } else {
@@ -1003,12 +1087,6 @@ int main(int argc, char **argv, char **envp) {
     Pexit(exe, 0, "too small");
   }
   pe = ebuf->buf + rc;
-
-  /* resolve argv[0] to reflect path search */
-  if (argc > 0 && ((*prog != '/' && *exe == '/' && !StrCmp(prog, argv[0])) ||
-                   !StrCmp(BaseName(prog), argv[0]))) {
-    argv[0] = exe;
-  }
 
   /* generate some hard random data */
   if ((rc = sys_getentropy(M->rando, sizeof(M->rando))) < 0) {

@@ -3,7 +3,7 @@
 #endif
 
 #define __COSMOPOLITAN_MAJOR__ 3
-#define __COSMOPOLITAN_MINOR__ 1
+#define __COSMOPOLITAN_MINOR__ 6
 #define __COSMOPOLITAN_PATCH__ 2
 #define __COSMOPOLITAN__                                                   \
   (100000000 * __COSMOPOLITAN_MAJOR__ + 1000000 * __COSMOPOLITAN_MINOR__ + \
@@ -81,11 +81,6 @@
 
 #ifndef __BIGGEST_ALIGNMENT__
 #define __BIGGEST_ALIGNMENT__ 16
-#endif
-
-#ifdef _COSMO_SOURCE
-#define FRAMESIZE 65536
-#define _PAGESIZE 4096
 #endif
 
 #if defined(__LP64__) && !defined(__INT64_TYPE__)

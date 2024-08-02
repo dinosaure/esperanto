@@ -1,14 +1,42 @@
+#include "libc/sysv/consts/auxv.h"
+#include "libc/runtime/runtime.h"
+#include "libc/runtime/runtime.h"
 
 /* ---------------------------- setting mparams -------------------------- */
 
 #if LOCK_AT_FORK
+#if ONLY_MSPACES
+
+static void dlmalloc_pre_fork(void) {
+  mstate h;
+  for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
+    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
+      ACQUIRE_LOCK(&h->mutex);
+}
+
+static void dlmalloc_post_fork_parent(void) {
+  mstate h;
+  for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
+    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
+      RELEASE_LOCK(&h->mutex);
+}
+
+static void dlmalloc_post_fork_child(void) {
+  mstate h;
+  for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
+    if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
+      (void)INITIAL_LOCK(&h->mutex);
+}
+
+#else
 static void dlmalloc_pre_fork(void)         { ACQUIRE_LOCK(&(gm)->mutex); }
 static void dlmalloc_post_fork_parent(void) { RELEASE_LOCK(&(gm)->mutex); }
 static void dlmalloc_post_fork_child(void)  { (void)INITIAL_LOCK(&(gm)->mutex); }
+#endif /* ONLY_MSPACES */
 #endif /* LOCK_AT_FORK */
 
 /* Initialize mparams */
-__attribute__((__constructor__)) int init_mparams(void) {
+__attribute__((__constructor__(49))) int init_mparams(void) {
 #ifdef NEED_GLOBAL_LOCK_INIT
   if (malloc_global_mutex_status <= 0)
     init_malloc_global_mutex();
@@ -21,8 +49,8 @@ __attribute__((__constructor__)) int init_mparams(void) {
     size_t gsize;
 
 #if defined(__COSMOPOLITAN__)
-    psize = FRAMESIZE;
-    gsize = FRAMESIZE;
+    psize = getpagesize();
+    gsize = DEFAULT_GRANULARITY ? DEFAULT_GRANULARITY : psize;
 #elif !defined(WIN32)
     psize = malloc_getpagesize;
     gsize = ((DEFAULT_GRANULARITY != 0)? DEFAULT_GRANULARITY : psize);
@@ -94,6 +122,10 @@ __attribute__((__constructor__)) int init_mparams(void) {
   }
 
   // RELEASE_MALLOC_GLOBAL_LOCK();
+
+#if ONLY_MSPACES
+  threaded_dlmalloc();
+#endif
 
   __runlevel = RUNLEVEL_MALLOC;
   return 1;

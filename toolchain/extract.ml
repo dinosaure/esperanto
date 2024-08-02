@@ -2,6 +2,7 @@ module Digest = Digestif.SHA256
 
 let ( / ) = Filename.concat
 let () = assert (Filename.dir_sep = "/")
+let () = Printexc.record_backtrace true
 let is_directory path = Sys.file_exists path && Sys.is_directory path
 
 let mkdir path =

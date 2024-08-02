@@ -1,12 +1,10 @@
 #ifndef COSMOPOLITAN_LIBC_STDIO_H_
 #define COSMOPOLITAN_LIBC_STDIO_H_
 
-#define EOF      -1  /* end of file */
-#define WEOF     -1u /* end of file (multibyte) */
-#define _IOFBF   0   /* fully buffered */
-#define _IOLBF   1   /* line buffered */
-#define _IONBF   2   /* no buffering */
-#define _CS_PATH 0
+#define EOF    -1 /* end of file */
+#define _IOFBF 0  /* fully buffered */
+#define _IOLBF 1  /* line buffered */
+#define _IONBF 2  /* no buffering */
 
 #define L_tmpnam     20
 #define L_ctermid    20
@@ -21,6 +19,7 @@ COSMOPOLITAN_C_START_
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o                                              ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
+/* clang-format off */
 
 struct FILE;
 typedef struct FILE FILE;
@@ -29,155 +28,146 @@ extern FILE *stdin;
 extern FILE *stdout;
 extern FILE *stderr;
 
-errno_t ferror(FILE *) paramsnonnull();
-void clearerr(FILE *) paramsnonnull();
-int feof(FILE *) paramsnonnull();
-int getc(FILE *) paramsnonnull();
-int putc(int, FILE *) paramsnonnull();
-int fflush(FILE *);
-int fpurge(FILE *);
-int fgetc(FILE *) paramsnonnull();
-char *fgetln(FILE *, size_t *) paramsnonnull((1));
-int ungetc(int, FILE *) paramsnonnull();
-int fileno(FILE *) paramsnonnull() nosideeffect;
-int fputc(int, FILE *) paramsnonnull();
-int fputs(const char *, FILE *) paramsnonnull();
-int fputws(const wchar_t *, FILE *) paramsnonnull();
-void flockfile(FILE *) paramsnonnull();
-void funlockfile(FILE *) paramsnonnull();
-int ftrylockfile(FILE *) paramsnonnull();
-char *fgets(char *, int, FILE *) paramsnonnull();
-wchar_t *fgetws(wchar_t *, int, FILE *) paramsnonnull();
-wint_t putwc(wchar_t, FILE *) paramsnonnull();
-wint_t fputwc(wchar_t, FILE *) paramsnonnull();
-wint_t putwchar(wchar_t);
-wint_t getwchar(void);
-wint_t getwc(FILE *) paramsnonnull();
-wint_t fgetwc(FILE *) paramsnonnull();
-wint_t ungetwc(wint_t, FILE *) paramsnonnull();
-int getchar(void);
-int putchar(int);
-int puts(const char *);
-ssize_t getline(char **, size_t *, FILE *) paramsnonnull();
-ssize_t getdelim(char **, size_t *, int, FILE *) paramsnonnull();
-FILE *fopen(const char *, const char *) paramsnonnull((2)) __wur;
-FILE *fdopen(int, const char *) paramsnonnull() __wur;
-FILE *fmemopen(void *, size_t, const char *) paramsnonnull((3)) __wur;
-FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3));
-size_t fread(void *, size_t, size_t, FILE *) paramsnonnull((4));
-size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull((4));
-int fclose(FILE *);
-int fseek(FILE *, long, int) paramsnonnull();
-long ftell(FILE *) paramsnonnull();
-int fseeko(FILE *, int64_t, int) paramsnonnull();
-int64_t ftello(FILE *) paramsnonnull();
-void rewind(FILE *) paramsnonnull();
-int fopenflags(const char *) paramsnonnull();
-void setlinebuf(FILE *);
-void setbuf(FILE *, char *);
-void setbuffer(FILE *, char *, size_t);
-int setvbuf(FILE *, char *, int, size_t);
-int pclose(FILE *);
-char *ctermid(char *);
-void perror(const char *) relegated;
-size_t confstr(int, char *, size_t);
+errno_t ferror(FILE *) libcesque paramsnonnull() __read_write(1);
+void clearerr(FILE *) libcesque paramsnonnull() __read_write(1);
+int feof(FILE *) libcesque paramsnonnull() __read_write(1);
+int getc(FILE *) libcesque paramsnonnull() __read_write(1);
+int putc(int, FILE *) libcesque paramsnonnull() __read_write(2);
+int fflush(FILE *) libcesque __read_write(1);
+int fpurge(FILE *) libcesque __read_write(1);
+int fgetc(FILE *) libcesque paramsnonnull() __read_write(1);
+char *fgetln(FILE *, size_t *) libcesque paramsnonnull((1)) __read_write(1) __write_only(2);
+int ungetc(int, FILE *) libcesque paramsnonnull() __write_only(2);
+int fileno(FILE *) libcesque paramsnonnull() nosideeffect __write_only(1);
+int fputc(int, FILE *) libcesque paramsnonnull() __write_only(2);
+int fputs(const char *, FILE *) libcesque paramsnonnull() __write_only(2);
+int fputws(const wchar_t *, FILE *) libcesque paramsnonnull() __write_only(2);
+void flockfile(FILE *) libcesque __write_only(1);
+void funlockfile(FILE *) libcesque paramsnonnull() __write_only(1);
+int ftrylockfile(FILE *) libcesque paramsnonnull() __write_only(1);
+char *fgets(char *, int, FILE *) libcesque paramsnonnull() __write_only(1, 2) __read_write(3);
+wchar_t *fgetws(wchar_t *, int, FILE *) libcesque paramsnonnull() __write_only(1, 2) __read_write(3);
+wint_t putwc(wchar_t, FILE *) libcesque paramsnonnull() __write_only(2);
+wint_t fputwc(wchar_t, FILE *) libcesque paramsnonnull() __write_only(2);
+wint_t putwchar(wchar_t) libcesque;
+wint_t getwchar(void) libcesque;
+wint_t getwc(FILE *) libcesque paramsnonnull() __write_only(1);
+wint_t fgetwc(FILE *) libcesque paramsnonnull() __write_only(1);
+wint_t ungetwc(wint_t, FILE *) libcesque paramsnonnull() __write_only(2);
+int getchar(void) libcesque;
+int putchar(int) libcesque;
+int puts(const char *) libcesque __read_only(1);
+
+ssize_t getline(char **, size_t *, FILE *) libcesque paramsnonnull() __read_write(1) __read_write(2) __read_write(3);
+ssize_t getdelim(char **, size_t *, int, FILE *) libcesque paramsnonnull() __read_write(1) __read_write(2) __read_write(4);
+FILE *fopen(const char *, const char *) libcesque paramsnonnull((2)) __read_only(1) __read_only(2) __wur;
+FILE *fdopen(int, const char *) libcesque paramsnonnull() __read_only(2) __wur;
+FILE *fmemopen(void *, size_t, const char *) libcesque paramsnonnull((3)) __read_write(1) __read_only(3) __wur;
+FILE *freopen(const char *, const char *, FILE *) paramsnonnull((2, 3)) __read_only(1) __read_only(2) __read_write(3);
+size_t fread(void *, size_t, size_t, FILE *) libcesque paramsnonnull((4)) __write_only(1) __read_write(4);
+size_t fwrite(const void *, size_t, size_t, FILE *) paramsnonnull((4)) __read_only(1) __read_write(4);
+int fclose(FILE *) libcesque __read_write(1);
+int fseek(FILE *, long, int) libcesque paramsnonnull() __read_write(1);
+long ftell(FILE *) libcesque paramsnonnull() __read_write(1);
+int fseeko(FILE *, int64_t, int) libcesque paramsnonnull() __read_write(1);
+int64_t ftello(FILE *) libcesque paramsnonnull() __read_write(1);
+void rewind(FILE *) libcesque paramsnonnull() __read_write(1);
+int fopenflags(const char *) libcesque paramsnonnull() __read_only(1);
+void setlinebuf(FILE *) libcesque __read_write(1);
+void setbuf(FILE *, char *) libcesque __read_write(1) __write_only(2);
+void setbuffer(FILE *, char *, size_t) libcesque __read_write(1) __write_only(2);
+int setvbuf(FILE *, char *, int, size_t) libcesque __read_write(1);
+int pclose(FILE *) libcesque __read_write(1);
+char *ctermid(char *) libcesque __write_only(1);
+void perror(const char *) libcesque relegated __read_only(1);
 
 typedef uint64_t fpos_t;
-char *gets(char *) paramsnonnull();
-int fgetpos(FILE *, fpos_t *) paramsnonnull();
-int fsetpos(FILE *, const fpos_t *) paramsnonnull();
+char *gets(char *) libcesque paramsnonnull() __write_only(1);
+int fgetpos(FILE *, fpos_t *) libcesque paramsnonnull() __read_write(1) __write_only(2);
+int fsetpos(FILE *, const fpos_t *) libcesque paramsnonnull() __read_write(1) __read_only(2);
 
-FILE *tmpfile(void) __wur;
-char *tmpnam(char *) __wur;
-char *tmpnam_r(char *) __wur;
-int system(const char *);
-FILE *popen(const char *, const char *);
+FILE *tmpfile(void) libcesque __wur;
+char *tmpnam(char *) libcesque __write_only(1) __wur;
+char *tmpnam_r(char *) libcesque __write_only(1) __wur;
+
+FILE *popen(const char *, const char *) libcesque __read_only(1) __read_only(2);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » formatting                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int printf(const char *, ...) printfesque(1)
-    paramsnonnull((1)) dontthrow nocallback;
-int vprintf(const char *, va_list) paramsnonnull() dontthrow nocallback;
-int fprintf(FILE *, const char *, ...) printfesque(2)
-    paramsnonnull((1, 2)) dontthrow nocallback;
-int vfprintf(FILE *, const char *, va_list)
-    paramsnonnull() dontthrow nocallback;
-int scanf(const char *, ...) scanfesque(1);
-int vscanf(const char *, va_list);
-int fscanf(FILE *, const char *, ...) scanfesque(2);
-int vfscanf(FILE *, const char *, va_list);
+int printf(const char *, ...) printfesque(1) paramsnonnull((1)) libcesque __read_only(1);
+int vprintf(const char *, va_list) paramsnonnull() libcesque __read_only(1);
+int fprintf(FILE *, const char *, ...) printfesque(2) paramsnonnull((1, 2)) libcesque __read_write(1) __read_only(2);
+int vfprintf(FILE *, const char *, va_list) paramsnonnull() libcesque __read_write(1) __read_only(2);
+int scanf(const char *, ...) libcesque scanfesque(1) __read_only(1);
+int vscanf(const char *, va_list) libcesque __read_only(1);
+int fscanf(FILE *, const char *, ...) libcesque scanfesque(2) __read_write(1) __read_only(2);
+int vfscanf(FILE *, const char *, va_list) libcesque __read_write(1) __read_only(2);
 
-int snprintf(char *, size_t, const char *, ...)
-    printfesque(3) dontthrow nocallback;
-int vsnprintf(char *, size_t, const char *, va_list)
-dontthrow nocallback;
-int sprintf(char *, const char *, ...) dontthrow nocallback;
-int vsprintf(char *, const char *, va_list)
-dontthrow nocallback;
+int snprintf(char *, size_t, const char *, ...) printfesque(3) libcesque __write_only(1) __read_only(3);
+int vsnprintf(char *, size_t, const char *, va_list) libcesque __write_only(1) __read_only(3);
+int sprintf(char *, const char *, ...) libcesque __write_only(1) __read_only(2);
+int vsprintf(char *, const char *, va_list) libcesque __write_only(1) __read_only(2);
 
-int fwprintf(FILE *, const wchar_t *, ...);
-int fwscanf(FILE *, const wchar_t *, ...);
-int swprintf(wchar_t *, size_t, const wchar_t *, ...);
-int swscanf(const wchar_t *, const wchar_t *, ...);
-int vfwprintf(FILE *, const wchar_t *, va_list);
-int vfwscanf(FILE *, const wchar_t *, va_list);
-int vswprintf(wchar_t *, size_t, const wchar_t *, va_list);
-int vswscanf(const wchar_t *, const wchar_t *, va_list);
-int vwprintf(const wchar_t *, va_list);
-int vwscanf(const wchar_t *, va_list);
-int wprintf(const wchar_t *, ...);
-int wscanf(const wchar_t *, ...);
-int fwide(FILE *, int);
+int fwprintf(FILE *, const wchar_t *, ...) libcesque __read_write(1) __read_only(2);
+int fwscanf(FILE *, const wchar_t *, ...) libcesque __read_write(1) __read_only(2);
+int swprintf(wchar_t *, size_t, const wchar_t *, ...) libcesque __write_only(1) __read_only(3);
+int swscanf(const wchar_t *, const wchar_t *, ...) libcesque __read_only(1) __read_only(2);
+int vfwprintf(FILE *, const wchar_t *, va_list) libcesque __read_write(1) __read_only(2);
+int vfwscanf(FILE *, const wchar_t *, va_list) libcesque __read_write(1) __read_only(2);
+int vswprintf(wchar_t *, size_t, const wchar_t *, va_list) libcesque __write_only(1) __read_only(3);
+int vswscanf(const wchar_t *, const wchar_t *, va_list) libcesque __read_only(1) __read_only(2);
+int vwprintf(const wchar_t *, va_list) libcesque __read_only(1);
+int vwscanf(const wchar_t *, va_list) libcesque __read_only(1);
+int wprintf(const wchar_t *, ...) libcesque __read_only(1);
+int wscanf(const wchar_t *, ...) libcesque __read_only(1);
+int fwide(FILE *, int) libcesque __read_write(1);
 
-int sscanf(const char *, const char *, ...) scanfesque(2);
-int vsscanf(const char *, const char *, va_list);
+int sscanf(const char *, const char *, ...) libcesque scanfesque(2) __read_only(1) __read_only(2);
+int vsscanf(const char *, const char *, va_list) libcesque __read_only(1) __read_only(2);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » allocating                                 ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int asprintf(char **, const char *, ...) printfesque(2)
-    paramsnonnull((1, 2)) libcesque;
-int vasprintf(char **, const char *, va_list) paramsnonnull() libcesque;
+int asprintf(char **, const char *, ...) printfesque(2) paramsnonnull((1, 2)) libcesque __write_only(1);
+int vasprintf(char **, const char *, va_list) paramsnonnull() libcesque __write_only(1);
 
 /*───────────────────────────────────────────────────────────────────────────│─╗
 │ cosmopolitan § standard i/o » without mutexes                            ─╬─│┼
 ╚────────────────────────────────────────────────────────────────────────────│*/
 
-int getc_unlocked(FILE *) paramsnonnull();
-int puts_unlocked(const char *);
-int getchar_unlocked(void);
-int putc_unlocked(int, FILE *) paramsnonnull();
-int putchar_unlocked(int);
-void clearerr_unlocked(FILE *);
-int feof_unlocked(FILE *);
-int ferror_unlocked(FILE *);
-int fileno_unlocked(FILE *);
-int fflush_unlocked(FILE *);
-int fgetc_unlocked(FILE *);
-int fputc_unlocked(int, FILE *);
-size_t fread_unlocked(void *, size_t, size_t, FILE *);
-size_t fwrite_unlocked(const void *, size_t, size_t, FILE *);
-char *fgets_unlocked(char *, int, FILE *);
-int fputs_unlocked(const char *, FILE *);
-wint_t getwc_unlocked(FILE *);
-wint_t getwchar_unlocked(void);
-wint_t fgetwc_unlocked(FILE *);
-wint_t fputwc_unlocked(wchar_t, FILE *);
-wint_t putwc_unlocked(wchar_t, FILE *);
-wint_t putwchar_unlocked(wchar_t);
-wchar_t *fgetws_unlocked(wchar_t *, int, FILE *);
-int fputws_unlocked(const wchar_t *, FILE *);
-wint_t ungetwc_unlocked(wint_t, FILE *) paramsnonnull();
-int ungetc_unlocked(int, FILE *) paramsnonnull();
-int fseek_unlocked(FILE *, int64_t, int) paramsnonnull();
-ssize_t getdelim_unlocked(char **, size_t *, int, FILE *) paramsnonnull();
-int fprintf_unlocked(FILE *, const char *, ...) printfesque(2)
-    paramsnonnull((1, 2)) dontthrow nocallback;
-int vfprintf_unlocked(FILE *, const char *, va_list)
-    paramsnonnull() dontthrow nocallback;
+int getc_unlocked(FILE *) libcesque paramsnonnull() __read_write(1);
+int puts_unlocked(const char *) libcesque __read_only(1);
+int getchar_unlocked(void) libcesque;
+int putc_unlocked(int, FILE *) libcesque paramsnonnull() __read_write(2);
+int putchar_unlocked(int) libcesque;
+void clearerr_unlocked(FILE *) libcesque __write_only(1);
+int feof_unlocked(FILE *) libcesque __read_only(1);
+int ferror_unlocked(FILE *) libcesque __read_only(1);
+int fileno_unlocked(FILE *) libcesque __read_only(1);
+int fflush_unlocked(FILE *) libcesque __read_write(1);
+int fgetc_unlocked(FILE *) libcesque __read_write(1);
+int fputc_unlocked(int, FILE *) libcesque __read_write(2);
+size_t fread_unlocked(void *, size_t, size_t, FILE *) libcesque __write_only(1) __read_write(4);
+size_t fwrite_unlocked(const void *, size_t, size_t, FILE *) libcesque __read_only(1) __read_write(4);
+char *fgets_unlocked(char *, int, FILE *) libcesque __write_only(1) __read_write(3);
+int fputs_unlocked(const char *, FILE *) libcesque __read_only(1) __read_write(2);
+wint_t getwc_unlocked(FILE *) libcesque __read_write(1);
+wint_t getwchar_unlocked(void) libcesque;
+wint_t fgetwc_unlocked(FILE *) libcesque __read_write(1);
+wint_t fputwc_unlocked(wchar_t, FILE *) libcesque __read_write(2);
+wint_t putwc_unlocked(wchar_t, FILE *) libcesque __read_write(2);
+wint_t putwchar_unlocked(wchar_t) libcesque;
+wchar_t *fgetws_unlocked(wchar_t *, int, FILE *) libcesque __write_only(1, 2) __read_write(3);
+int fputws_unlocked(const wchar_t *, FILE *) libcesque __read_only(1) __read_write(2);
+wint_t ungetwc_unlocked(wint_t, FILE *) libcesque paramsnonnull() __read_write(2);
+int ungetc_unlocked(int, FILE *) libcesque paramsnonnull() __read_write(2);
+int fseek_unlocked(FILE *, int64_t, int) libcesque paramsnonnull() __read_write(1);
+ssize_t getdelim_unlocked(char **, size_t *, int, FILE *) paramsnonnull() __read_write(1) __read_write(2) __read_write(4);
+int fprintf_unlocked(FILE *, const char *, ...) printfesque(2) libcesque __read_write(1) __read_only(2);
+int vfprintf_unlocked(FILE *, const char *, va_list) paramsnonnull() libcesque __read_write(1) __read_only(2);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_STDIO_H_ */
