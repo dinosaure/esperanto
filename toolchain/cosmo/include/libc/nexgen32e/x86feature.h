@@ -28,7 +28,9 @@
 #define X86_ARCH_CAPABILITIES    7H,        EDX, 29, 0
 #define X86_AVX                  1H,        ECX, 28, _X86_CC_AVX              /* sandybridge c. 2012 */
 #define X86_AVX2                 7H,        EBX,  5, _X86_CC_AVX2             /* haswell c. 2013 */
-#define X86_AVXVNNI              7H,        EAX,  4, _X86_CC_AVXVNNI
+#define X86_AVXVNNI              7H_1H,     EAX,  4, _X86_CC_AVXVNNI
+#define X86_AVXVNNIINT8          7H_1H,     EDX,  4, _X86_CC_AVXVNNIINT8
+#define X86_AVXVNNIINT16         7H_1H,     EDX, 10, _X86_CC_AVXVNNIINT16
 #define X86_AVX512BW             7H,        EBX, 30, 0
 #define X86_AVX512CD             7H,        EBX, 28, 0
 #define X86_AVX512DQ             7H,        EBX, 17, 0
@@ -40,7 +42,8 @@
 #define X86_AVX512VL             7H,        EBX, 31, 0
 #define X86_AVX512_4FMAPS        7H,        EDX,  3, 0
 #define X86_AVX512_4VNNIW        7H,        EDX,  2, _X86_CC_AVX5124VNNIW
-#define X86_AVX512_BF16          7H,        EAX,  5, _X86_CC_AVX512BF16
+#define X86_AVX512_FP16          7H,        EDX, 23, _X86_CC_AVX512FP16
+#define X86_AVX512_BF16          7H_1H,     EAX,  5, _X86_CC_AVX512BF16
 #define X86_AVX512_BITALG        7H,        ECX, 12, 0
 #define X86_AVX512_VBMI2         7H,        ECX,  6, 0
 #define X86_AVX512_VNNI          7H,        ECX, 11, _X86_CC_AVX512VNNI
@@ -151,6 +154,7 @@
 #define X86_XTPR                 1H,        ECX, 14, 0
 #define X86_ZERO_FCS_FDS         7H,        EBX, 13, 0
 #define X86_JIT                  80000001H, ECX, 31, 0                        /* IsGenuineBlink() */
+#define X86_HYBRID_CPU           7H,        EDX, 15, 0                        /* Has performance and efficiency cores */
 /* clang-format on */
 
 /* AMD specific features */

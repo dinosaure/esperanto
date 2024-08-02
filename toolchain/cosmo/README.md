@@ -9,12 +9,13 @@ reach a broader audience from the platform(s) of your choosing.
 
 ## What's Included
 
-This toolchain bundles GCC 11.2.0, Cosmopolitan Libc, LLVM LIBCXX, and
-LLVM compiler-rt. Additional libraries were provided by Musl Libc, and
-the venerable BSDs OSes. This lets you benefit from the awesome modern
-GCC compiler with the strongest GPL barrier possible. The preprocessor
-advertises cross compilers as both `__COSMOCC__` and `__COSMOPOLITAN__`
-whereas `cosmocc` additionally defines `__FATCOSMOCC__`.
+This toolchain bundles GCC 14.1.0, Cosmopolitan Libc, LLVM LIBCXX, LLVM
+compiler-rt, and LLVM OpenMP. Additional libraries were provided by Musl
+Libc, and the venerable BSDs OSes. This lets you benefit from the
+awesome modern GCC compiler with the strongest GPL barrier possible. The
+preprocessor advertises cross compilers as both `__COSMOCC__` and
+`__COSMOPOLITAN__` whereas `cosmocc` additionally defines
+`__FATCOSMOCC__`.
 
 ## Getting Started
 
@@ -28,7 +29,7 @@ You now have an [actually portable
 executable](https://justine.lol/ape.html) that'll run on your host
 system. If anything goes wrong, see the Gotchas and Troubleshoot
 sections below. It should have also outputted two ELF executables as
-well, named `hello.com.dbg` (x86-64 Linux ELF) and `hello.aarch64.elf`
+well, named `hello.dbg` (x86-64 Linux ELF) and `hello.aarch64.elf`
 (AARCH64 Linux ELF). On Linux systems, those files are also runnable,
 which is useful for easily running programs in GDB. On other OSes GDB
 can still debug APE programs if the ELF is loaded in a second step using
@@ -108,7 +109,7 @@ On Apple Silicon, `aarch64-unknown-cosmo-cc` produces ELF binaries. If
 you build a hello world program, then you need to say `ape ./hello`. If
 you don't have an `ape` command then run `cc -o ape bin/ape-m1.c` which
 should be moved to `/usr/local/bin/ape`. Your APE interpreter might
-already exist under a path like `$TMPDIR/.ape-1.9`. It's important to
+already exist under a path like `$TMPDIR/.ape-1.10`. It's important to
 note this is only a gotcha for the cross compiler. Your `cosmocc`
 compiler wraps the actual ELF binaries with a shell script that'll
 extract and compile an APE loader automatically, as needed. This also
@@ -134,6 +135,131 @@ kinds of codebases using `cosmocc` which is just a convenient wrapper
 around the cross compilers, which would be a better choice to use in
 this type of circumstance.
 
+## Usage
+
+By default, all the code you compile will use the baseline of the X86_64
+and AARCH64, which is K8 and ARMv8.0. You can pass architecture specific
+flags to use newer ISAs by using the `-Xx86_64` and `-Xaarch64` prefixes
+like `-Xx86_64-mssse3` and `-Xaarch64-march=armv8.2-a+dotprod`.
+
+## Flags
+
+The following supplemental flags are defined by cosmocc:
+
+- `-mcosmo` causes `_COSMO_SOURCE` to be defined. This has a similar
+  effect to defining `_GNU_SOURCE`. When you use this flag, many
+  non-standard GNU, BSD, and Cosmo Libc APIs will become visible in
+  headers, e.g. `stdlib.h` will now define `ShowCrashReports()`.
+  Including `cosmo.h` has a similar effect, however it's recommended
+  that any program that uses cosmo-specific APIs pass this flag.
+
+- `-mdbg` may be passed when linking programs. It has the same effect as
+  `export MODE=dbg` in that it will cause an alternative build of the
+  Cosmopolitan Libc runtime to be linked that was built with `-O0 -g`.
+  Under the normal build mode, `--ftrace` output is oftentimes missing
+  important pieces of the puzzle due to inlining. This mode makes it
+  more comprehensible. It's also the only way to make using GDB to
+  troubleshoot issues inside Cosmo Libc work reliably. Please be warned
+  that this flag may enable some heavyweight runtime checks. For
+  example, mmap() will become O(n) rather than O(logn) in an effort to
+  spot data structure corruption. Lastly, the linked Cosmo runtime was
+  compiled with `-fsanitize=undefined` (UBSAN) although you still need
+  to pass that flag too if you want it for your own code.
+
+- `-mtiny` may be passed when linking programs. It has the same effect
+  as `export MODE=tiny` in that it will cause an alternative build of
+  the Cosmopolitan Libc runtime to be linked that's optimized for code
+  size. In the normal build mode, the smallest possible binary size will
+  be on the order of hundreds of kb, due to heavyweight features like
+  `--ftrace` and `--strace` being part of the mandatory runtime. Those
+  features don't exist in the tiny runtime, which should produce ~147kb
+  fat binaries and ~36kb x86-only binaries. You may also use this flag
+  when compiling objects. Since there's no function tracing, using this
+  will eliminate the NOPs that get inserted into the prologues of your
+  functions to make them hookable, which also greatly reduces code size.
+  Please note that this does not specify an `-O` flag, so you may want
+  to pass `-Os` too. Please note that this mode is granted leeway to
+  trade away performance whenever possible. Functions like memmove()
+  will stop using fancy vectorization which can dramatically decrease
+  the performance of certain use cases. malloc() will no longer be
+  scalable either. Cosmo malloc() will normally perform similarly to
+  things like jemalloc. But in -mtiny mode it's protected by a GIL that
+  may cause a multithreaded C++ HTTP server that makes intense usage of
+  the STL may drop from 3.7 million requests per second to just 17k.
+  We've seen it happen. malloc() will also stop using cookies which add
+  bloat but are considered important by some people for both security
+  and reporting errors on corruption. APIs will also begin refraining
+  from detecting usage errors that are the fault of the caller, so this
+  mode isn't recommended for development. Where -mtiny truly shines is
+  when you're writing tiny programs. Particularly if they're ephemeral
+  and frequent (e.g. build tooling), because the tiny runtime needs to
+  do less work at process startup.
+
+- `-moptlinux` uses the optimized Linux-only version of Cosmopolitan
+  Libc runtime libraries. Your program will only be able to run on
+  Linux. The runtime is compiled at `-O3` although it still supports AMD
+  K8+ (c. 2003). Optimizations like red zone that wouldn't otherwise be
+  possible are enabled. Function call tracing and system call logging is
+  disabled. All the Windows polyfills go away and your binaries will be
+  significantly tinier. The `cosmocc` compiler will generate a shell
+  script with the magic `jartsr='` so you won't get unwanted attention
+  from Windows virus scanners. You're even allowed to use flags like
+  `-fomit-frame-pointer` when you use this mode. Users report optlinux
+  has helped them make the Python interpreter 5% faster, like distros,
+  optlinux will salt the earth if it gains a 1% advantage on benchmark
+  games. Therefore this mode gives you an apples-to-apples comparison
+  between cosmocc versus the gcc/clang configs used by linux distros.
+
+## Raw Toolchains
+
+The `cosmocc` and `cosmoar` programs use shell script magic to run both
+toolchains under the hood. Sometimes this magic doesn't work when you're
+building software that needs to do things like run the C preprocessor in
+aarch64 mode. In such cases, cosmocc provides x86\_64 and aarch64 only
+toolchains which give you more power and control over your builds.
+
+- `x86_64-unknown-cosmo-cc`, `x86_64-unknown-cosmo-c++`, and
+  `x86_64-linux-cosmo-as` let you build multi-OS programs that only run
+  on x86\_64. You'll need this if you want to compile complex projects
+  like Emacs and OpenSSL. These are shell scripts that help you make
+  sure your software is compiled with the correct set of flags.
+
+- `aarch64-unknown-cosmo-cc`, `aarch64-unknown-cosmo-c++`, and
+  `aarch64-linux-cosmo-as` let you build multi-OS programs that only run
+  on ARM64. You'll need this if you want to compile complex projects
+  like Emacs and OpenSSL. These are shell scripts that help you make
+  sure your software is compiled with the correct set of flags.
+
+- `aarch64-linux-cosmo-cc`, `aarch64-linux-cosmo-c++`,
+  `aarch64-linux-cosmo-as`, and `aarch64-linux-cosmo-ld` are the actual
+  compiler executables. Using these grants full control over your
+  compiler and maximum performance. This is the approach favored for
+  instance by the Cosmopolitan Mono Repo's Makefile. If you use these,
+  then you should have zero expectation of support, because you'll be
+  assuming all responsibility for knowing about all the ABI-related
+  flags your Cosmopolitan runtime requires.
+
+When you use the "unknown" OS compilers, they'll link ELF executables
+which embed an APE program image. This is so it's possible to have DWARF
+debugging data. If you say:
+
+```
+x86_64-unknown-cosmo-cc -Os -mtiny -o hello hello.c
+./hello
+x86_64-linux-cosmo-objcopy -SO binary hello hello.com
+./hello.com
+```
+
+Then you can unwap the raw stripped APE executable and get a much
+smaller file than you otherwise would using the `-s` flag.
+
+If you compile your software twice, using both the x86\_64 and aarch64
+compilers, then it's possible to link the two binaries into a single fat
+binary yourself via the `apelink` program. To understand how this
+process works, it works best if you use the `BUILDLOG` variable, to see
+how the shell script wrappers are doing it. You can also consult the
+build configs of the ahgamut/superconfigure project on GitHub.
+
 ## Troubleshooting
 
 Your `cosmocc` compiler runs a number commands under the hood. If
@@ -155,12 +281,29 @@ being passed to the freestanding Linux compiler.
 (cd /home/jart/cosmocc; bin/aarch64-linux-cosmo-gcc -o/tmp/fatcosmocc.w48k03qgw8692.o -D__COSMOPO...
 (cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.i5lugr6bc0gu0.o)
 (cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.w48k03qgw8692.o)
-(cd /home/jart/cosmocc; bin/x86_64-linux-cosmo-gcc -o/tmp/fatcosmocc.ovdo2nqvkjjg3.com.dbg c...
+(cd /home/jart/cosmocc; bin/x86_64-linux-cosmo-gcc -o/tmp/fatcosmocc.ovdo2nqvkjjg3.dbg c...
 (cd /home/jart/cosmocc; bin/aarch64-linux-cosmo-gcc -o/tmp/fatcosmocc.d3ca1smuot0k0.aarch64.elf /...
 (cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.d3ca1smuot0k0.aarch64.elf)
-(cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.ovdo2nqvkjjg3.com.dbg)
+(cd /home/jart/cosmocc; bin/fixupobj /tmp/fatcosmocc.ovdo2nqvkjjg3.dbg)
 (cd /home/jart/cosmocc; bin/apelink -l bin/ape.elf -l bin/ape.aarch64 -...
 (cd /home/jart/cosmocc; bin/pecheck hello)
+```
+
+## Building Open Source Software
+
+Assuming you put `cosmocc/bin/` on your `$PATH`, integrating with GNU
+Autotools projects becomes easy. The trick here is to use a `--prefix`
+that *only* contains software that's been built by cosmocc. That's
+because Cosmopolitan Libc uses a different ABI than your distro.
+
+```sh
+export CC="cosmocc -I/opt/cosmos/include -L/opt/cosmos/lib"
+export CXX="cosmoc++ -I/opt/cosmos/include -L/opt/cosmos/lib"
+export INSTALL=cosmoinstall
+export AR=cosmoar
+./configure --prefix=/opt/cosmos
+make -j
+make install
 ```
 
 ## Tools
@@ -244,7 +387,7 @@ The `cosmoaddr2line` program may be used to print backtraces, based on
 DWARF data, whenever one of your programs reports a crash. It accepts as
 an argument the ELF executable produced by `cosmocc`, which is different
 from the APE executable. For example, if `cosmocc` compiles a program
-named `hello` then you'll need to pass either `hello.com.dbg` (x86-64)
+named `hello` then you'll need to pass either `hello.dbg` (x86-64)
 or `hello.aarch64.elf` to cosmoaddr2line to get the backtrace. After the
 ELf executable comes the program counter (instruction pointer) addresses
 which are easily obtained using `__builtin_frame_address(0)`. Cosmo can
@@ -272,9 +415,9 @@ EINVAL: ... }` in cases where constants like `EINVAL` are linkable
 symbols. Your code will be rewritten in such cases to use a series of if
 statements instead, so that Cosmopolitan Libc's system constants will
 work as expected. Our modifications to GNU GCC are published under the
-ISC license at <https://github.com/ahgamut/gcc/tree/portcosmo-11.2>. The
+ISC license at <https://github.com/ahgamut/gcc/tree/portcosmo-14.1>. The
 binaries you see here were first published at
-<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.24> which
+<https://github.com/ahgamut/superconfigure/releases/tag/z0.0.48> which
 is regularly updated.
 
 ## Legal

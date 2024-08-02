@@ -59,7 +59,9 @@ typedef double fenv_t;
 
 #endif /* __x86_64__ */
 
-#ifdef __FLT_EVAL_METHOD__
+#ifdef __STDC_WANT_IEC_60559_TYPES_EXT__
+#define FLT_EVAL_METHOD __FLT_EVAL_METHOD_TS_18661_3__
+#elif defined(__FLT_EVAL_METHOD__)
 #define FLT_EVAL_METHOD __FLT_EVAL_METHOD__
 #else
 #define FLT_EVAL_METHOD 0
@@ -79,6 +81,8 @@ int fesetenv(const fenv_t *);
 int fesetexceptflag(const fexcept_t *, int);
 int fesetround(int);
 int fetestexcept(int);
+int feenableexcept(int);
+int fedisableexcept(int);
 int feupdateenv(const fenv_t *);
 int __flt_rounds(void);
 int __fesetround(int);

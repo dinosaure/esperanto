@@ -29,7 +29,7 @@
 
 */
 
-#ifdef USE_SPIN_LOCKS
+#if USE_SPIN_LOCKS
 
 #define MLOCK_T atomic_uint
 
@@ -40,8 +40,12 @@ static int malloc_wipe(MLOCK_T *lk) {
 
 static int malloc_lock(MLOCK_T *lk) {
   if (!__threaded) return 0;
-  while (atomic_exchange_explicit(lk, 1, memory_order_acquire)) {
-    pthread_pause_np();
+  for (;;) {
+    if (!atomic_exchange_explicit(lk, 1, memory_order_acquire))
+      break;
+    for (;;)
+      if (!atomic_load_explicit(lk, memory_order_relaxed))
+        break;
   }
   return 0;
 }
@@ -62,11 +66,13 @@ static int malloc_wipe(MLOCK_T *lk) {
 }
 
 static int malloc_lock(MLOCK_T *lk) {
+  if (!__threaded) return 0;
   nsync_mu_lock(lk);
   return 0;
 }
 
 static int malloc_unlock(MLOCK_T *lk) {
+  if (!__threaded) return 0;
   nsync_mu_unlock(lk);
   return 0;
 }
@@ -76,7 +82,7 @@ static int malloc_unlock(MLOCK_T *lk) {
 #define ACQUIRE_LOCK(lk) malloc_lock(lk)
 #define RELEASE_LOCK(lk) malloc_unlock(lk)
 #define INITIAL_LOCK(lk) malloc_wipe(lk)
-#define DESTROY_LOCK(lk)
+#define DESTROY_LOCK(lk) malloc_wipe(lk)
 #define ACQUIRE_MALLOC_GLOBAL_LOCK() ACQUIRE_LOCK(&malloc_global_mutex);
 #define RELEASE_MALLOC_GLOBAL_LOCK() RELEASE_LOCK(&malloc_global_mutex);
 

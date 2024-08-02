@@ -224,12 +224,12 @@ _mm_insert_ps (__m128 __D, __m128 __S, const int __N)
 extern __inline int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_extract_ps (__m128 __X, const int __N)
 {
-  union { int i; float f; } __tmp;
-  __tmp.f = __builtin_ia32_vec_ext_v4sf ((__v4sf)__X, __N);
-  return __tmp.i;
+  union { int __i; float __f; } __tmp;
+  __tmp.__f = __builtin_ia32_vec_ext_v4sf ((__v4sf)__X, __N);
+  return __tmp.__i;
 }
 #else
-#define _mm_extract_ps(X, N) (__extension__ ({ union { int i; float f; } __tmp; __tmp.f = __builtin_ia32_vec_ext_v4sf ((__v4sf)(__m128)(X), (int)(N)); __tmp.i; }))
+#define _mm_extract_ps(X, N) (__extension__ ({ union { int __i; float __f; } __tmp; __tmp.__f = __builtin_ia32_vec_ext_v4sf ((__v4sf)(__m128)(X), (int)(N)); __tmp.__i; }))
 #endif
 #define _MM_EXTRACT_FLOAT(D, S, N) { (D) = __builtin_ia32_vec_ext_v4sf ((__v4sf)(S), (N)); }
 #define _MM_PICK_OUT_PS(X, N) _mm_insert_ps (_mm_setzero_ps (), (X), _MM_MK_INSERTPS_NDX ((N), 0, 0x0e))
@@ -524,15 +524,10 @@ _mm_cmpgt_epi64 (__m128i __X, __m128i __Y)
 #pragma GCC pop_options
 #endif
 #include "third_party/intel/popcntintrin.internal.h"
-#ifndef __SSE4_1__
+#ifndef __CRC32__
 #pragma GCC push_options
-#pragma GCC target("sse4.1")
-#define __DISABLE_SSE4_1__
-#endif
-#ifndef __SSE4_2__
-#pragma GCC push_options
-#pragma GCC target("sse4.2")
-#define __DISABLE_SSE4_2__
+#pragma GCC target("crc32")
+#define __DISABLE_CRC32__
 #endif
 extern __inline unsigned int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_crc32_u8 (unsigned int __C, unsigned char __V)
@@ -556,12 +551,8 @@ _mm_crc32_u64 (unsigned long long __C, unsigned long long __V)
   return __builtin_ia32_crc32di (__C, __V);
 }
 #endif
-#ifdef __DISABLE_SSE4_2__
-#undef __DISABLE_SSE4_2__
-#pragma GCC pop_options
-#endif
-#ifdef __DISABLE_SSE4_1__
-#undef __DISABLE_SSE4_1__
+#ifdef __DISABLE_CRC32__
+#undef __DISABLE_CRC32__
 #pragma GCC pop_options
 #endif
 #endif

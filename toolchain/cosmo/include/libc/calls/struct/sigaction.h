@@ -5,7 +5,7 @@
 COSMOPOLITAN_C_START_
 
 typedef void (*sighandler_t)(int);
-typedef void (*sigaction_f)(int, struct siginfo *, void *);
+typedef void (*sigaction_f)(int, siginfo_t *, void *);
 
 struct sigaction {
   union {
@@ -17,8 +17,8 @@ struct sigaction {
   sigset_t sa_mask;
 };
 
-sighandler_t signal(int, sighandler_t);
-int sigaction(int, const struct sigaction *, struct sigaction *);
+sighandler_t signal(int, sighandler_t) libcesque;
+int sigaction(int, const struct sigaction *, struct sigaction *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_CALLS_STRUCT_SIGACTION_H_ */

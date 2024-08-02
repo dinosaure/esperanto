@@ -11,19 +11,16 @@ COSMOPOLITAN_C_START_
 #define RTLD_NEXT    ((void *)-1)
 #define RTLD_DEFAULT ((void *)0)
 
-char *dlerror(void);
-void *dlopen(const char *, int);
-void *dlsym(void *, const char *);
-int dlclose(void *);
-int dl_iterate_phdr(int (*)(void *, size_t, void *), void *);
+char *dlerror(void) libcesque;
+void *dlopen(const char *, int) libcesque;
+void *dlsym(void *, const char *) libcesque;
+int dlclose(void *) libcesque;
 
-#ifdef _COSMO_SOURCE
-char *cosmo_dlerror(void);
-void *cosmo_dlopen(const char *, int);
-void *cosmo_dlsym(void *, const char *);
-int cosmo_dlclose(void *);
-int cosmo_dl_iterate_phdr(int (*)(void *, size_t, void *), void *);
-#endif
+char *cosmo_dlerror(void) libcesque;
+void *cosmo_dlopen(const char *, int) libcesque;
+void *cosmo_dlsym(void *, const char *) libcesque;
+void *cosmo_dltramp(void *) libcesque;
+int cosmo_dlclose(void *) libcesque;
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_DLFCN_H_ */

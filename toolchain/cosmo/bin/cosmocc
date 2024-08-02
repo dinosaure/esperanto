@@ -6,23 +6,22 @@
 BIN=${0%/*}
 PROG=${0##*/}
 ORIGINAL="$0 $*"
-GCC_VERSION=11.2.0
+GCC_VERSION=14.1.0
 TMPDIR=${TMPDIR:-/tmp}
 
 if [ "$1" = "--version" ]; then
 cat <<EOF
 $PROG (GCC) $GCC_VERSION
-Copyright (c) 2023 Justine Alexandra Roberts Tunney
+Copyright (c) 2024 Justine Alexandra Roberts Tunney
 Cosmopolitan Libc and LLVM libcxx/compiler-rt are subject to non-GPL
 notice licenses, e.g. ISC, MIT, etc. Your compiled programs must embed
-our copyright notices. This toolchain is configured to do so default.
+our copyright notices. This toolchain is configured to do so by default.
 Cosmopolitan comes with absolutely NO WARRANTY of any kind.
 For more information, see the Cosmopolitan LICENSE files.
-Copyright (C) 2019 Free Software Foundation, Inc.
+Copyright (C) 2022 Free Software Foundation, Inc.
 This launches GNU GCC/Binutils subprocesses, which is free software; see
-Cosmopolitan's third_party/gcc/ for source code and copying conditions.
-There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.
+cosmocc's LICENSE files for source code and copying conditions. There is
+NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 EOF
 exit
 fi
@@ -80,6 +79,7 @@ OPT=
 ARGS=
 FLAGS=
 OUTPUT=
+MDFLAG=0
 MCOSMO=0
 INTENT=ld
 NEED_JOIN=
@@ -89,6 +89,8 @@ APELINKFLAGS=
 FLAGS_X86_64=
 FLAGS_AARCH64=
 INPUT_FILE_COUNT=0
+DEPENDENCY_OUTPUT=
+NEED_DEPENDENCY_OUTPUT=
 for x; do
   if [ x"$x" != x"${x#* }" ]; then
     fatal_error "arguments containing spaces unsupported: $x"
@@ -96,6 +98,10 @@ for x; do
   if [ -n "$NEED_OUTPUT" ]; then
     NEED_OUTPUT=
     OUTPUT=$x
+    continue
+  elif [ -n "$NEED_DEPENDENCY_OUTPUT" ]; then
+    NEED_DEPENDENCY_OUTPUT=
+    DEPENDENCY_OUTPUT=$x
     continue
   elif [ -n "$NEED_JOIN" ]; then
     x="${NEED_JOIN}${x}"
@@ -124,11 +130,19 @@ for x; do
   elif [ x"$x" != x"${x#-o}" ]; then  # startswith(x, "-o")
     OUTPUT=${x#-o}
     continue
+  elif [ x"$x" = x"-MF" ]; then
+    NEED_DEPENDENCY_OUTPUT=1
+    continue
+  elif [ x"$x" != x"${x#-MF}" ]; then  # startswith(x, "-MF")
+    DEPENDENCY_OUTPUT=${x#-MF}
+    continue
   elif [ x"$x" != x"${x#-O}" ]; then  # startswith(x, "-O")
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
     INTENT=cc
-  elif [ x"$x" = x"-E" ]; then
+  elif [ x"$x" = x"-E" ] ||
+       [ x"$x" = x"-M" ] ||
+       [ x"$x" = x"-MM" ]; then
     INTENT=cpp
   elif [ x"$x" = x"-s" ]; then
     APELINKFLAGS="$APELINKFLAGS -s"
@@ -142,21 +156,28 @@ for x; do
   elif [ x"$x" = x"-mcosmo" ]; then
     MCOSMO=1
     continue
+  elif [ x"$x" = x"-mdbg" ]; then
+    MODE=dbg
+    continue
+  elif [ x"$x" = x"-mtiny" ]; then
+    MODE=tiny
+    continue
+  elif [ x"$x" = x"-moptlinux" ]; then
+    MODE=optlinux
+    continue
   elif [ x"$x" = x"-fomit-frame-pointer" ]; then
     # Quoth Apple: "The frame pointer register must always address a
     # valid frame record. Some functions — such as leaf functions or
     # tail calls — may opt not to create an entry in this list. As a
     # result, stack traces are always meaningful, even without debug
     # information."
-    x="-momit-leaf-frame-pointer -foptimize-sibling-calls"
+    x="-momit-leaf-frame-pointer -foptimize-sibling-calls -fschedule-insns2"
   elif [ x"$x" = x"-r" ] ||
        [ x"$x" = x"-S" ] ||
        [ x"$x" = x"-pie" ] ||
-       [ x"$x" = x"-frtti" ] ||
        [ x"$x" = x"-shared" ] ||
        [ x"$x" = x"-nostdlib" ] ||
        [ x"$x" = x"-mred-zone" ] ||
-       [ x"$x" = x"-fexceptions" ] ||
        [ x"$x" = x"-fsanitize=thread" ]; then
     fatal_error "$x flag not supported"
   elif [ x"$x" = x"-mno-red-zone" ]; then
@@ -168,10 +189,9 @@ for x; do
     # no support for building dynamic shared objects yet. reports
     # indicate that ignoring these flags, helps let autoconf know
     continue
-  elif [ x"$x" = x"-Werror" ] || \
-       [ x"$x" = x"-pedantic-errors" ]; then
-    # this toolchain is intended for building other people's code
-    # elevating warnings into errors, should only be done by devs
+  elif [ x"$x" = x"-fpie" ] || [ x"$x" = x"-pie" ]; then
+    # no support for position independent executables
+    # https://github.com/jart/cosmopolitan/issues/1126
     continue
   elif [ x"$x" = x"-static-libgcc" ] || \
        [ x"$x" = x"-shared-libgcc" ]; then
@@ -185,18 +205,21 @@ for x; do
     continue
   elif [ x"$x" != x"${x#-Xaarch64}" ]; then
     x=${x#-Xaarch64}
-    FLAGS_aarch64="$FLAGS_aarch64 $x"
+    FLAGS_AARCH64="$FLAGS_AARCH64 $x"
     continue
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     Exit 0
-  elif [ x"$x" = x"-e" ] ||
+  elif [ x"$x" = x"-x" ] ||
+       [ x"$x" = x"-e" ] ||
        [ x"$x" = x"-z" ] ||
        [ x"$x" = x"-T" ] ||
        [ x"$x" = x"-L" ] ||
        [ x"$x" = x"-I" ] ||
        [ x"$x" = x"-D" ] ||
        [ x"$x" = x"-U" ] ||
+       [ x"$x" = x"-MF" ] ||
+       [ x"$x" = x"-MT" ] ||
        [ x"$x" = x"-iquote" ] ||
        [ x"$x" = x"-isystem" ] ||
        [ x"$x" = x"-include" ]; then
@@ -205,6 +228,9 @@ for x; do
   elif [ x"$x" = x"--param" ]; then
     NEED_EQUAL=$x
     continue
+  elif [ x"$x" = x"-MD" ] ||
+       [ x"$x" = x"-MMD" ]; then
+    MDFLAG=1
   fi
   FLAGS="$FLAGS $x"
   ARGS="$ARGS $x"
@@ -220,13 +246,17 @@ fi
 
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__ -D__FATCOSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
-CPPFLAGS="-fno-pie -nostdinc -fno-math-errno -isystem $BIN/../include"
+CPPFLAGS="-fno-pie -nostdinc -isystem $BIN/../include"
 CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
-LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,norelro -Wl,--gc-sections"
+LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelro -Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 
-if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
+# these features screw with backtraces so avoid them
+if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux" ]; then
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
+fi
+if [ x"$OPT" != x"-O3" ] && [ x"$MODE" != x"optlinux" ]; then
+  CFLAGS="$CFLAGS -fno-schedule-insns2"
 fi
 
 CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
@@ -235,23 +265,46 @@ if [ x"$PROG" != x"${PROG%++}" ]; then
   CC_X86_64="$BIN/x86_64-linux-cosmo-g++"
   CC_AARCH64="$BIN/aarch64-linux-cosmo-g++"
   CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+  CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
+else
+  CFLAGS="$CFLAGS -Wno-implicit-int"
 fi
 
-CRT_X86_64="$BIN/../x86_64-linux-cosmo/lib/ape.o $BIN/../x86_64-linux-cosmo/lib/crt.o"
-CPPFLAGS_X86_64="$CPPFLAGS -mno-red-zone"
+if [ x"$MODE" = x"dbg" ]; then
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/dbg"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/dbg"
+elif [ x"$MODE" = x"tiny" ]; then
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/tiny"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/tiny"
+elif [ x"$MODE" = x"optlinux" ]; then
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib/optlinux"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib/optlinux"
+else
+  LIB_X86_64="$BIN/../x86_64-linux-cosmo/lib"
+  LIB_AARCH64="$BIN/../aarch64-linux-cosmo/lib"
+fi
+
+CRT_X86_64="$LIB_X86_64/ape.o $LIB_X86_64/crt.o"
+CPPFLAGS_X86_64="$CPPFLAGS"
 CFLAGS_X86_64="$CFLAGS -mno-tls-direct-seg-refs"
-LDFLAGS_X86_64="$LDFLAGS -L$BIN/../x86_64-linux-cosmo/lib -Wl,-T,$BIN/../x86_64-linux-cosmo/lib/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=16384"
+LDFLAGS_X86_64="$LDFLAGS -L$LIB_X86_64 -L$BIN/../x86_64-linux-cosmo/lib -Wl,-T,$LIB_X86_64/ape.lds -Wl,-z,common-page-size=4096 -Wl,-z,max-page-size=16384"
 LDLIBS_X86_64="-lcosmo"
 
-CRT_AARCH64="$BIN/../aarch64-linux-cosmo/lib/crt.o"
-CPPFLAGS_AARCH64="$CPPFLAGS"
+CRT_AARCH64="$LIB_AARCH64/crt.o"
+CPPFLAGS_AARCH64="$CPPFLAGS -fsigned-char"
 CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
-LDFLAGS_AARCH64="$LDFLAGS -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$BIN/../aarch64-linux-cosmo/lib/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
+LDFLAGS_AARCH64="$LDFLAGS -L$LIB_AARCH64 -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$LIB_AARCH64/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
 LDLIBS_AARCH64="-lcosmo"
 
-if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ]; then
-  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16"
-  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6"
+SUPPORT_VECTOR=-1
+if [ x"$MODE" = x"optlinux" ]; then
+  CPPFLAGS_X86_64="$CPPFLAGS_X86_64 -mno-red-zone"
+  SUPPORT_VECTOR=linux
+fi
+
+if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux" ]; then
+  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
+  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
 fi
 
 if [ x"$PROG" != x"${PROG%++}" ]; then
@@ -305,6 +358,21 @@ mangle_object_path() {
   mangled_path="${outdir}.$arch/$outbas"
 }
 
+get_dependency_outputs() {
+  if [ $MDFLAG -eq 1 ]; then
+    if [ -n "$DEPENDENCY_OUTPUT" ]; then
+      DEPENDENCY_FLAGS_x86_64="-MF $DEPENDENCY_OUTPUT"
+      mangle_object_path "$DEPENDENCY_OUTPUT" aarch64
+      DEPENDENCY_FLAGS_AARCH64="-MF $mangled_path"
+    else
+      base="$1.d"
+      DEPENDENCY_FLAGS_x86_64="-MF $base"
+      mangle_object_path "$base" aarch64
+      DEPENDENCY_FLAGS_AARCH64="-MF $mangled_path"
+    fi
+  fi
+}
+
 mktemper() {
   "$BIN/mktemper" \
     "$TMPDIR/fatcosmocc.XXXXXXXXXXXXX$1"
@@ -322,6 +390,7 @@ build_object() {
         $CFLAGS_X86_64 \
         $CPPFLAGS_X86_64 \
         "$@" \
+        $DEPENDENCY_FLAGS_x86_64 \
         $FLAGS_X86_64 \
         $PRECIOUS
     log_command "$@"
@@ -342,6 +411,7 @@ build_object() {
         $CFLAGS_AARCH64 \
         $CPPFLAGS_AARCH64 \
         "$@" \
+        $DEPENDENCY_FLAGS_AARCH64 \
         $FLAGS_AARCH64 \
         $PRECIOUS
     log_command "$@"
@@ -397,6 +467,7 @@ for x in $ARGS; do
         OUTPUT_X86_64=$OUTPUT
         mangle_object_path "$OUTPUT" aarch64
         OUTPUT_AARCH64="$mangled_path"
+        get_dependency_outputs "$OUTPUT"
         build_object $FLAGS -c "$x"
       else
         # e.g. `cc -c dir/foo.c` builds foo.o
@@ -404,6 +475,7 @@ for x in $ARGS; do
         OUTPUT_X86_64="${o%.*}.o"
         mangle_object_path "${o%.*}.o" aarch64
         OUTPUT_AARCH64="$mangled_path"
+        get_dependency_outputs "${o%.*}"
         build_object $FLAGS -c "$x"
       fi
     else
@@ -411,10 +483,15 @@ for x in $ARGS; do
       if [ -z "$OUTPUT" ]; then
         OUTPUT=a.out
       fi
+      if [ -z "$DEPENDENCY_OUTPUT" ]; then
+        o=${x##*/}
+        DEPENDENCY_OUTPUT="a-${o%.*}.d"
+      fi
       # e.g. `cc -o foo foo.c` should *not* build foo.o
       OUTPUT_X86_64=$(mktemper .o) || Exit
       OUTPUT_AARCH64=$(mktemper .o) || Exit
       TEMP_FILES="${TEMP_FILES} ${OUTPUT_X86_64} ${OUTPUT_AARCH64}"
+      get_dependency_outputs
       build_object $FLAGS -c "$x"
       LDARGS_X86_64="${LDARGS_X86_64} ${OUTPUT_X86_64}"
       LDARGS_AARCH64="${LDARGS_AARCH64} ${OUTPUT_AARCH64}"
@@ -478,6 +555,7 @@ fi
 
 set -- \
 "$BIN/apelink" \
+  -V "$SUPPORT_VECTOR" \
   -l "$BIN/ape-x86_64.elf" \
   -l "$BIN/ape-aarch64.elf" \
   -M "$BIN/ape-m1.c" \
@@ -488,10 +566,12 @@ set -- \
 log_command "$@"
 "$@" || Exit
 
-set -- \
-"$BIN/pecheck" "$OUTPUT"
-log_command "$@"
-"$@" || Exit
+if [ x"$MODE" != "optlinux" ]; then
+  set -- \
+  "$BIN/pecheck" "$OUTPUT"
+  log_command "$@"
+  "$@" || Exit
+fi
 
 if [ $INTENT = ld ] && [ $SAVE_TEMPS -eq 0 ]; then
   mv -f "$OUTPUT_X86_64" "${OUTPUT%.com}.com.dbg" || Exit
