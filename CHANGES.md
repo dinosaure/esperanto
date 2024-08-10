@@ -1,4 +1,8 @@
-## v0.0.5 (2024-12-21) Paris - France
+## v0.0.6 (2024-08-10) Paris - France
+
+- Upgrade to Cosmopolitan 3.6.2
+
+## v0.0.5 (2023-12-21) Paris - France
 
 - Support Cosmopolitan 3.1 (#43, @dinosaure)
 - Fix the compilation of esperanto with setup-ocaml and GitHub CI (#44, @dinosaure)
