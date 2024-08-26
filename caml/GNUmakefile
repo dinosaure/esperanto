@@ -10,7 +10,7 @@ SHELL := env PATH=$(PATH) ${SHELL}
 # CFLAGS used to build ocaml runtime
 LOCAL_CFLAGS=$(MAKECONF_CFLAGS)
 # CFLAGS used by the OCaml compiler to build C stubs
-GLOBAL_CFLAGS=""
+GLOBAL_CFLAGS="-U__DATE__ -U__TIME__"
 # LIBS used by the OCaml compiler to link executables
 GLOBAL_LIBS=$(MAKECONF_EXTRA_LIBS)
 
@@ -154,7 +154,7 @@ ocaml/Makefile.config: ocaml/Makefile ocaml/esperanto.h
 		CC="$(MAKECONF_CC)" \
 		CFLAGS="-Wno-int-conversion" \
 		OC_CFLAGS="$(OC_CFLAGS)" \
-		OCAMLC_CFLAGS="$(GLOBAL_CFLAGS)" \
+		OCAMLC_CFLAGS=$(GLOBAL_CFLAGS) \
 		AS="$(MAKECONF_AS)" \
 		ASPP="$(MAKECONF_CC) $(OC_CFLAGS) -c" \
 		CPPFLAGS="$(OC_CFLAGS)" \
