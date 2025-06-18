@@ -17,7 +17,10 @@ jobs:
         allow-prerelease-opam: true
 # See jart/cosmopolitan#3
     - name: Fix binfmt and Cosmopolitan
-      run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+      run: |
+        sudo wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
+        sudo chmod +x /usr/bin/ape
+        sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
     - name: Use the upstream version of OCaml 5.3.0
       run: opam switch create 5.3.0
     - name: Pinning packages
