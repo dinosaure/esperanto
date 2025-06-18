@@ -1,0 +1,85 @@
+From f7ce7cf720c530ccf533868b2fc28ba2f75eb699 Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Mon, 9 Dec 2024 19:23:40 +0100
+Subject: [PATCH 05/21] Use a `TARGET_BINDIR` configure variable instead of
+ `--with-target-bindir`
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Change the way to configure the location of the runtime binaries on the
+target system from a `--with-target-bindir=...`, which allows users to
+use a meaningless `--without-target-bindir`, to a `TARGET_BINDIR`
+variable
+
+Suggested-by: Sébastien Hinderer <seb@tarides.com>
+Suggested-by: David Allsopp <david.allsopp@metastack.com>
+---
+ configure    | Bin 704905 -> 704715 bytes
+ configure.ac |  13 +++++--------
+ 2 files changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/configure b/configure
+index 328a177641cce86671c394ddde17eae70192f3b1..b9cd0229890350b736c804eaa7cc97a9e8910aef 100755
+GIT binary patch
+delta 252
+zcmeBd);`^+y+I*>H^ec>-8CfM$<xopGibAXfHmLd+&B{^H1P!qUlTU}KlqeQ1VufU
+z0vJqYJR~xC^+Bb{+K0F{KRLnlZ2HxFCdu{<>luNV35c12m<5PgftU@5*@2j2`-b(L
+z0<7971}Z7oDyUbebCqPI<|$YKjYpB){(1}N$68esF<W&Njnw3fd<7*H6!Gnh#$1;>
+NP`$DJ;cl)KtN<YjSrGsL
+
+delta 339
+zcmX@zsNLDDy+I*hvtED|A6rspUP@-s=IA&_rp>Doz9c{eCeJ=$G&ymPG+S|HaY<_K
+z=H7$f*fw83!Srmp%OXah>2KFD@<3HiXI#!GCRCnTk`Z5$Sd^Yx5)UzQ`owLF(w-<n
+z)(R+GTNRM5vcw#&)STi}1(n3&_`LiAE(J7I>grr+nOxHy7cq*q1MLN3CLm@8Viq7~
+z1!6WJW(Q)9?Qhp{in31sC(XvL0&#_sf~|sjg*sPBMrxjd6}s8mb+>SStd&D`mAZ;X
+rYH~)tf|3eEeEJVVE|u*GMqJxE*q|c&cX3HfzahgWvfX1hS2HUBFztl)
+
+diff --git a/configure.ac b/configure.ac
+index 7e3b3a054e..bb661f9f6a 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -519,11 +519,8 @@ AC_ARG_ENABLE([cmm-invariants],
+   [AS_HELP_STRING([--enable-cmm-invariants],
+     [enable invariants checks in Cmm])])
+ 
+-AC_ARG_WITH([target-bindir],
+-  [AS_HELP_STRING([--with-target-bindir],
+-    [location of the runtime binaries on the target system])],
+-  [target_bindir=$withval],
+-  [target_bindir=''])
++AC_ARG_VAR([TARGET_BINDIR],
++  [location of the runtime binaries on the target system])
+ 
+ AC_ARG_WITH([target-sh],
+   [AS_HELP_STRING([--with-target-sh],
+@@ -850,7 +847,7 @@ AS_IF([test "x$interpval" = "xyes"],
+ AC_CONFIG_COMMANDS([shebang],
+   [printf '%s\n%s\000\n' "$launch_method" "$ocaml_bindir" \
+     > stdlib/runtime.info
+-  printf '%s\n%s\000\n' "$target_launch_method" "$target_bindir" \
++  printf '%s\n%s\000\n' "$target_launch_method" "$TARGET_BINDIR" \
+     > stdlib/target_runtime.info],
+ dnl These declarations are put in a here-document in configure, so the command
+ dnl in '$(...)' _is_ evaluated as the content is written to config.status (by
+@@ -860,7 +857,7 @@ dnl nefarious single quotes which may appear in any of the strings.
+   target_launch_method=\
+ '$(echo "$target_launch_method" | sed -e "s/'/'\"'\"'/g")'
+   ocaml_bindir='$(echo "$ocaml_bindir" | sed -e "s/'/'\"'\"'/g")'
+-  target_bindir='$(echo "$target_bindir" | sed -e "s/'/'\"'\"'/g")'])
++  TARGET_BINDIR='$(echo "$TARGET_BINDIR" | sed -e "s/'/'\"'\"'/g")'])
+ 
+ # How to build sak
+ 
+@@ -2740,7 +2737,7 @@ AC_CONFIG_COMMANDS_PRE([
+   eval "exec_prefix=\"$exec_prefix\""
+   eval "ocaml_bindir=\"$bindir\""
+   eval "ocaml_libdir=\"$libdir\""
+-  AS_IF([test x"$target_bindir" = 'x'],[target_bindir="$ocaml_bindir"])
++  AS_IF([test x"$TARGET_BINDIR" = 'x'],[TARGET_BINDIR="$ocaml_bindir"])
+   AS_IF([test x"$target_launch_method" = 'x'],
+     [target_launch_method="$launch_method"])
+   prefix="$saved_prefix"
+-- 
+2.47.2
+

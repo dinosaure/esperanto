@@ -1,15 +1,15 @@
 #!/bin/sh
 
-prog_NAME="$(basename $0)"
+prog_NAME="$(basename "$0")"
 
 err()
 {
-    echo "${prog_NAME}: ERROR: $@" 1>&2
+    echo "${prog_NAME}: ERROR: $*" 1>&2
 }
 
 die()
 {
-    echo "${prog_NAME}: ERROR: $@" 1>&2
+    echo "${prog_NAME}: ERROR: $*" 1>&2
     exit 1
 }
 
@@ -17,12 +17,18 @@ usage()
 {
     cat <<EOM 1>&2
 usage: ${prog_NAME} [ OPTIONS ]
-Configures the ocaml-esperanto build system.
+Configures the esperanto build system.
 Options:
-    --prefix=DIR:
+    --prefix=DIR
         Installation prefix (default: /usr/local).
+    --sysroot=DIR
+        Installation prefix for the OCaml cross-compiler and its supporting
+        libraries (default: <installation prefix>/lib/esperanto).
     --target=TARGET
-        Cosmopolitan compiler toolchain to use.
+        Esperanto/Cosmopolitan compiler toolchain to use.
+    --othertoolprefix=PREFIX
+        Prefix for tools besides the Cosmopolitan toolchain
+        (default: \`TARGET-cc -dumpmachine\`-).
     --ocaml-configure-option=OPTION
         Add an option to the OCaml compiler configuration.
 EOM
@@ -30,22 +36,26 @@ EOM
 }
 
 OCAML_CONFIGURE_OPTIONS=
-OCAML_VERSION=$(ocamlopt -version)
-MAKECONF_PREFIX="/usr/local"
-CC=cc
+MAKECONF_PREFIX=/usr/local
 
 while [ $# -gt 0 ]; do
     OPT="$1"
 
     case "${OPT}" in
         --target=*)
-            CONFIG_TARGET="${OPT##*=}"
+            CONFIG_TARGET="${OPT#*=}"
             ;;
-        --ocaml-configure-option=*)
-            OCAML_CONFIGURE_OPTIONS="${OCAML_CONFIGURE_OPTIONS} ${OPT##*=}"
+        --othertoolprefix=*)
+            MAKECONF_TOOLPREFIX="${OPT#*=}"
             ;;
         --prefix=*)
-            MAKECONF_PREFIX="${OPT##*=}"
+            MAKECONF_PREFIX="${OPT#*=}"
+            ;;
+        --sysroot=*)
+            MAKECONF_SYSROOT="${OPT#*=}"
+            ;;
+        --ocaml-configure-option=*)
+            OCAML_CONFIGURE_OPTIONS="${OCAML_CONFIGURE_OPTIONS} ${OPT#*=}"
             ;;
         --help)
             usage
@@ -59,58 +69,31 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+MAKECONF_SYSROOT="${MAKECONF_SYSROOT:-$MAKECONF_PREFIX/lib/esperanto}"
+
 [ -z "${CONFIG_TARGET}" ] && die "The --target option needs to be specified."
 
-MAKECONF_CFLAGS=
-MAKECONF_CC="$CONFIG_TARGET-cc"
-MAKECONF_LD="$CONFIG_TARGET-ld"
-MAKECONF_AS="$MAKECONF_CC -c"
+TARGET_TRIPLET="$("$CONFIG_TARGET-cc" -dumpmachine)"
 
-BUILD_TRIPLET="$($MAKECONF_CC -dumpmachine)"
-OCAML_BUILD_ARCH=
+MAKECONF_TOOLPREFIX="${MAKECONF_TOOLPREFIX:-$TARGET_TRIPLET-}"
 
-case "${BUILD_TRIPLET}" in
+case "${TARGET_TRIPLET}" in
     amd64-*|x86_64-*)
-        BUILD_ARCH="x86_64"
-        OCAML_BUILD_ARCH="amd64"
+        TARGET_ARCH="x86_64"
         ;;
     aarch64-*)
-        BUILD_ARCH="aarch64"
-        OCAML_BUILD_ARCH="arm64"
+        TARGET_ARCH="aarch64"
         ;;
     *)
-        die "Unsupported target architecture: ${BUILD_TRIPLET}"
+        die "Unsupported build architecture: ${TARGET_TRIPLET}"
         ;;
 esac
-
-TRIPLET="$($CC -dumpmachine)"
-ARCH=
-
-case "${TRIPLET}" in
-    amd64-*|x86_64-*)
-        ARCH="x86_64"
-        ;;
-    aarch64-*)
-        die "The Cosmoplitan distribution works only on x86_64 architecture"
-        ;;
-    *)
-        die "Unsupported host architecture: ${TRIPLET}"
-        ;;
-esac
-
-# cosmocross takes care about extra libs (despite ocaml-solo5/solo5)
-EXTRA_LIBS=
 
 cat <<EOM >Makeconf
 MAKECONF_PREFIX=${MAKECONF_PREFIX}
-MAKECONF_CFLAGS=${MAKECONF_CFLAGS}
-MAKECONF_CC=${MAKECONF_CC}
-MAKECONF_LD=${MAKECONF_LD}
-MAKECONF_AS=${MAKECONF_AS}
-MAKECONF_ARCH=${ARCH}
-MAKECONF_BUILD_ARCH=${BUILD_ARCH}
-MAKECONF_OCAML_BUILD_ARCH=${OCAML_BUILD_ARCH}
+MAKECONF_SYSROOT=${MAKECONF_SYSROOT}
+MAKECONF_TOOLCHAIN=${CONFIG_TARGET}
+MAKECONF_TOOLPREFIX=${MAKECONF_TOOLPREFIX}
+MAKECONF_TARGET_ARCH=${TARGET_ARCH}
 MAKECONF_OCAML_CONFIGURE_OPTIONS=${OCAML_CONFIGURE_OPTIONS}
-MAKECONF_OCAML_VERSION=${OCAML_VERSION}
-MAKECONF_EXTRA_LIBS=${EXTRA_LIBS}
 EOM

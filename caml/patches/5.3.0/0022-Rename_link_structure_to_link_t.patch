@@ -1,0 +1,47 @@
+--- a/runtime/globroots.c	2025-06-18 17:20:46.414874760 +0100
++++ b/runtime/globroots.c	2025-06-18 17:22:00.451490310 +0100
+@@ -162,20 +162,20 @@
+ 
+ /* Linked-list of natdynlink'd globals */
+ 
+-typedef struct link {
++typedef struct link_s {
+   void *data;
+-  struct link *next;
+-} link;
++  struct link_s *next;
++} link_t;
+ 
+-static link *cons(void *data, link *tl) {
+-  link *lnk = caml_stat_alloc(sizeof(link));
++static link_t *cons(void *data, link_t *tl) {
++  link_t *lnk = caml_stat_alloc(sizeof(link_t));
+   lnk->data = data;
+   lnk->next = tl;
+   return lnk;
+ }
+ 
+ /* protected by roots_mutex */
+-static link * caml_dyn_globals = NULL;
++static link_t * caml_dyn_globals = NULL;
+ 
+ void caml_register_dyn_globals(void **globals, int nglobals) {
+   caml_plat_lock_blocking(&roots_mutex);
+@@ -186,7 +186,7 @@
+ 
+ static void scan_native_globals(scanning_action f, void* fdata)
+ {
+-  link* dyn_globals;
++  link_t* dyn_globals;
+ 
+   caml_plat_lock_blocking(&roots_mutex);
+   dyn_globals = caml_dyn_globals;
+@@ -202,7 +202,7 @@
+   }
+ 
+   /* Dynamic (natdynlink) global roots */
+-  for (link *lnk = dyn_globals; lnk != NULL; lnk = lnk->next) {
++  for (link_t *lnk = dyn_globals; lnk != NULL; lnk = lnk->next) {
+     for (value *glob = (value *) lnk->data; *glob != 0; glob++) {
+       for (int j = 0; j < Wosize_val(*glob); j++) {
+         f(fdata, Field(*glob, j), &Field(*glob, j));

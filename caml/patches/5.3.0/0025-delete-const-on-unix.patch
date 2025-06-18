@@ -1,0 +1,148 @@
+diff --git a/otherlibs/unix/access.c b/otherlibs/unix/access.c
+index 3e5ab2a..accefb9 100644
+--- a/otherlibs/unix/access.c
++++ b/otherlibs/unix/access.c
+@@ -37,7 +37,7 @@
+ # endif
+ #endif
+ 
+-static const int access_permission_table[] = {
++static int access_permission_table[] = {
+   R_OK,
+   W_OK,
+ #ifdef _WIN32
+diff --git a/otherlibs/unix/open_unix.c b/otherlibs/unix/open_unix.c
+index 4eeffb2..cf5aca2 100644
+--- a/otherlibs/unix/open_unix.c
++++ b/otherlibs/unix/open_unix.c
+@@ -38,7 +38,7 @@
+ #define O_RSYNC 0
+ #endif
+ 
+-static const int open_flag_table[15] = {
++static int open_flag_table[15] = {
+   O_RDONLY, O_WRONLY, O_RDWR, O_NONBLOCK, O_APPEND, O_CREAT, O_TRUNC, O_EXCL,
+   O_NOCTTY, O_DSYNC, O_SYNC, O_RSYNC,
+   0, /* O_SHARE_DELETE, Windows-only */
+@@ -48,7 +48,7 @@ static const int open_flag_table[15] = {
+ 
+ enum { CLOEXEC = 1, KEEPEXEC = 2 };
+ 
+-static const int open_cloexec_table[15] = {
++static int open_cloexec_table[15] = {
+   0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0,
+   0,
+diff --git a/otherlibs/unix/socket_unix.c b/otherlibs/unix/socket_unix.c
+index 4525462..237adf1 100644
+--- a/otherlibs/unix/socket_unix.c
++++ b/otherlibs/unix/socket_unix.c
+@@ -23,7 +23,7 @@
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ 
+-const int caml_unix_socket_domain_table[] = {
++int caml_unix_socket_domain_table[] = {
+   PF_UNIX, PF_INET,
+ #if defined(HAS_IPV6)
+   PF_INET6
+@@ -34,7 +34,7 @@ const int caml_unix_socket_domain_table[] = {
+ #endif
+ };
+ 
+-const int caml_unix_socket_type_table[] = {
++int caml_unix_socket_type_table[] = {
+   SOCK_STREAM, SOCK_DGRAM, SOCK_RAW, SOCK_SEQPACKET
+ };
+ 
+diff --git a/otherlibs/unix/sockopt_unix.c b/otherlibs/unix/sockopt_unix.c
+index a826de8..e23206c 100644
+--- a/otherlibs/unix/sockopt_unix.c
++++ b/otherlibs/unix/sockopt_unix.c
+@@ -108,7 +108,7 @@ struct socket_option {
+ 
+ /* Table of options, indexed by type */
+ 
+-static const struct socket_option sockopt_bool[] = {
++static struct socket_option sockopt_bool[] = {
+   { SOL_SOCKET, SO_DEBUG },
+   { SOL_SOCKET, SO_BROADCAST },
+   { SOL_SOCKET, SO_REUSEADDR },
+@@ -121,7 +121,7 @@ static const struct socket_option sockopt_bool[] = {
+   { SOL_SOCKET, SO_REUSEPORT }
+ };
+ 
+-static const struct socket_option sockopt_int[] = {
++static struct socket_option sockopt_int[] = {
+   { SOL_SOCKET, SO_SNDBUF },
+   { SOL_SOCKET, SO_RCVBUF },
+   { SOL_SOCKET, SO_ERROR },
+@@ -129,20 +129,20 @@ static const struct socket_option sockopt_int[] = {
+   { SOL_SOCKET, SO_RCVLOWAT },
+   { SOL_SOCKET, SO_SNDLOWAT } };
+ 
+-static const struct socket_option sockopt_linger[] = {
++static struct socket_option sockopt_linger[] = {
+   { SOL_SOCKET, SO_LINGER }
+ };
+ 
+-static const struct socket_option sockopt_timeval[] = {
++static struct socket_option sockopt_timeval[] = {
+   { SOL_SOCKET, SO_RCVTIMEO },
+   { SOL_SOCKET, SO_SNDTIMEO }
+ };
+ 
+-static const struct socket_option sockopt_unix_error[] = {
++static struct socket_option sockopt_unix_error[] = {
+   { SOL_SOCKET, SO_ERROR }
+ };
+ 
+-static const struct socket_option * sockopt_table[] = {
++static struct socket_option * sockopt_table[] = {
+   sockopt_bool,
+   sockopt_int,
+   sockopt_linger,
+@@ -150,7 +150,7 @@ static const struct socket_option * sockopt_table[] = {
+   sockopt_unix_error
+ };
+ 
+-static const char * getsockopt_fun_name[] = {
++static char * getsockopt_fun_name[] = {
+   "getsockopt",
+   "getsockopt_int",
+   "getsockopt_optint",
+@@ -158,7 +158,7 @@ static const char * getsockopt_fun_name[] = {
+   "getsockopt_error"
+ };
+ 
+-static const char * setsockopt_fun_name[] = {
++static char * setsockopt_fun_name[] = {
+   "setsockopt",
+   "setsockopt_int",
+   "setsockopt_optint",
+diff --git a/otherlibs/unix/unixsupport_unix.c b/otherlibs/unix/unixsupport_unix.c
+index 21fb325..b31fc47 100644
+--- a/otherlibs/unix/unixsupport_unix.c
++++ b/otherlibs/unix/unixsupport_unix.c
+@@ -242,7 +242,7 @@
+ #define EOVERFLOW (-1)
+ #endif
+ 
+-static const int error_table[] = {
++static int error_table[] = {
+   E2BIG, EACCES, EAGAIN, EBADF, EBUSY, ECHILD, EDEADLK, EDOM,
+   EEXIST, EFAULT, EFBIG, EINTR, EINVAL, EIO, EISDIR, EMFILE, EMLINK,
+   ENAMETOOLONG, ENFILE, ENODEV, ENOENT, ENOEXEC, ENOLCK, ENOMEM, ENOSPC,
+diff --git a/otherlibs/unix/wait.c b/otherlibs/unix/wait.c
+index 31fb2b9..48e6c8e 100644
+--- a/otherlibs/unix/wait.c
++++ b/otherlibs/unix/wait.c
+@@ -83,7 +83,7 @@ CAMLprim value caml_unix_wait(value unit)
+ #define waitpid(pid,status,opts) wait4(pid,status,opts,NULL)
+ #endif
+ 
+-static const int wait_flag_table[] = {
++static int wait_flag_table[] = {
+   WNOHANG, WUNTRACED
+ };
+ 

@@ -1,0 +1,68 @@
+From ec3c09ba2a8e70d51413ffae650fcc101fdf96be Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Mon, 26 Feb 2024 19:35:26 +0100
+Subject: [PATCH 19/21] Accept native freestanding targets at configure time
+
+Accept `*-none` and `*-elf*` triplets for all the architectures with a
+native backend to describe the corresponding freestanding target; `none`
+and `elf*` are the most commonly-used last components in triplets for
+freestanding targets
+Set `system` to `none` and `os_type` to `None` in such cases
+---
+ configure    | Bin 709722 -> 710423 bytes
+ configure.ac |  18 ++++++++++++++++--
+ 2 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/configure b/configure
+index d7921b85866b3adb0de8a9469b5a3d0966c1516b..e4efe90505bfeba237bce9057e33f6924fd4ed28 100755
+GIT binary patch
+delta 444
+zcmcb$LVNl;?S>Y{7N!>F7M2#)7Pc+yr`a`hv~;y}^YZgjYqY@3)SNUeO$9411t7>T
+zE~zX?wN>&1N>3N;WtZ80hn;=<>gng#uydIv7A0qxnZPtB7Ud#w;Bp|-YG86e&h&p9
+z*-eZ=)+tz9D=2FKttrSaPc14)HZ#ddg*ydJ45X27BfHvk&lT*l`q*`2>II1)>l8Aw
+zRw%A4E=kR`MKPi%vpBg7;dlfWuDNhCyR15jo?>H5g9^Bna2{L--%55#R2>x-X7LD1
+i;5?`f6IPJ%T+<J-v&*z^*vt;Z96-#ueZyw1RSEzq=Z!4@
+
+delta 62
+zcmbQfPW#ph?S>Y{7N!>F7M2#)7Pc+yr`f01++-Kn&d0&NWA${!A`ao{4OiK?+H<$D
+Q12G2>b8gSw#<fZT0N_s-mjD0&
+
+diff --git a/configure.ac b/configure.ac
+index e1f2e85610..04d31b4962 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1169,7 +1169,9 @@ AS_CASE([$ocaml_cc_vendor,$target],
+     [oc_ldflags='-brtl -bexpfull'
+     AC_DEFINE([HAS_ARCH_CODE32], [1])],
+   [gcc-*,powerpc-*-linux*],
+-    [oc_ldflags="-mbss-plt"])
++    [oc_ldflags="-mbss-plt"],
++  [*,*-*-none|*,*-*-elf*],
++    [ostype="None"])
+ 
+ # Winpthreads emulation library for the MSVC port
+ AC_MSG_CHECKING([for winpthreads sources])
+@@ -1586,7 +1588,19 @@ AS_CASE([$target],
+   [x86_64-*-cygwin*],
+     [has_native_backend=yes; arch=amd64; system=cygwin],
+   [riscv64-*-linux*],
+-    [has_native_backend=yes; arch=riscv; model=riscv64; system=linux]
++    [has_native_backend=yes; arch=riscv; model=riscv64; system=linux],
++  [aarch64-*-none|arm64-*-none|aarch64-*-elf*|arm64-*-elf*],
++    [has_native_backend=yes; arch=arm64; system=none],
++  [powerpc64le*-*-none|powerpc64le*-*-elf*],
++    [has_native_backend=yes; arch=power; model=ppc64le; system=none],
++  [powerpc64*-*-none|powerpc64*-*-elf*],
++    [has_native_backend=yes; arch=power; model=ppc64; system=none],
++  [riscv64-*-none|riscv64-*-elf*],
++    [has_native_backend=yes; arch=riscv; model=riscv64; system=none],
++  [s390x*-*-none|s390x*-*-elf*],
++    [has_native_backend=yes; arch=s390x; model=z10; system=none],
++  [x86_64-*-none|x86_64-*-elf*|x86_64-*-cosmo],
++    [has_native_backend=yes; arch=amd64; system=none]
+ )
+ 
+ AS_CASE([$arch],
+-- 
+2.47.2
+

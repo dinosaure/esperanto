@@ -1,0 +1,113 @@
+From 2371883be0f6d1e116487e74d43fb1341ea18805 Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Mon, 13 Jan 2025 12:07:00 +0100
+Subject: [PATCH 13/21] Detect the need for the GNU note for non-executable
+ stack
+
+Detect during `configure` whether the C compiler generates a
+`.note.GNU-stack` section to mark it explicitly as non-executable
+Define a macro in `m.h` and a configure variable so that OCaml can do as
+cc does
+
+Detail: without the explicit `.note.GNU-stack` section, recent versions
+of GNU ld show, at least on some targets:
+/usr/bin/ld: warning: .... missing .note.GNU-stack section implies executable stack
+/usr/bin/ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+---
+ aclocal.m4          |  24 ++++++++++++++++++++++++
+ configure           | Bin 705055 -> 706768 bytes
+ configure.ac        |   3 +++
+ runtime/caml/m.h.in |   5 +++++
+ 4 files changed, 32 insertions(+)
+
+diff --git a/aclocal.m4 b/aclocal.m4
+index b17e11d511..9c6feb1034 100644
+--- a/aclocal.m4
++++ b/aclocal.m4
+@@ -526,6 +526,30 @@ AC_DEFUN([OCAML_CC_SUPPORTS_ATOMIC], [
+   OCAML_CC_RESTORE_VARIABLES
+ ])
+ 
++# Detects whether the C compiler generates an explicit .note.GNU-stack section
++# to mark the stack as non-executable, so that we can follow suit
++AC_DEFUN([OCAML_WITH_NONEXECSTACK_NOTE],
++  [AC_REQUIRE([AC_PROG_FGREP])dnl
++  AC_CACHE_CHECK([if $CC generates a .note.GNU-stack section],
++    [ocaml_cv_prog_cc_nonexecstack_note],
++    [OCAML_CC_SAVE_VARIABLES
++
++    # We write the assembly into the .$ac_objext file as AC_COMPILE_IFELSE
++    # assumes an error if such a file doesn't exist after compiling
++    CFLAGS="$CFLAGS -S -o conftest.$ac_objext"
++
++    ocaml_cv_prog_cc_nonexecstack_note=no
++    AC_COMPILE_IFELSE([AC_LANG_SOURCE],
++      [AS_IF([$FGREP .note.GNU-stack conftest.$ac_objext >/dev/null],
++        [ocaml_cv_prog_cc_nonexecstack_note=yes])])
++    OCAML_CC_RESTORE_VARIABLES])
++
++  AS_IF([test "x$ocaml_cv_prog_cc_nonexecstack_note" = xyes],
++    [with_nonexecstack_note=true
++    AC_DEFINE([WITH_NONEXECSTACK_NOTE], [1])],
++    [with_nonexecstack_note=false])
++])
++
+ AC_DEFUN([OCAML_CC_SUPPORTS_LABELS_AS_VALUES], [
+   AC_CACHE_CHECK([whether $CC supports the labels as values extension],
+     [ocaml_cv_prog_cc_labels_as_values],
+diff --git a/configure b/configure
+index 8e8f2351c65874ed71a60f10a88584157cb6b08a..1735c1178d1f8c7c322f108c4f0207e6ff2576a1 100755
+GIT binary patch
+delta 669
+zcmbQ=qJ3ea_6CVCvGUB4jQG6#ywr-+<l>UV<ZK|PB(+&QtX({e5r~<9m>Gy!wu^_c
+zPVJn&`39@y^xRZ-c7^oRywsw^lGI{_L<K#NCOvn*P+hPY3dO0(CDR4_*=46Y=(DgW
+zJ3A9r9oNsUEr{We=?kATnr#1@z^TGmAD*gEUX)pqs!)=Vs*qS*oSK`IQ>l=dSCS7F
+z(NjrGj?YiZO06hSNXyItDN%5Aj(7I=4e<1FjrVkO^$B+6QUC&FknYl4kjwKFQj3c6
+zixe``6pBleGk{(JYfZ^dEzVOfQAn-GEG|(<Oe;w(Qs7F?&n?Kz$;?aVn$9T3DZ->1
+zJY7GAQ&J0TW`1&FZcco1S$siJetLXzGG>_C=H*Xc_?g{vI&&JQp(M~k6*u=F*8ude
+zn||;Ylj!6IQ<3S*Ca?=)36b-qtgh1yS~-NK2mE4XnJ${ieq(xbE2Gu)&WY@T0_Y()
+z{h=AV`1AunDJgWRR3!yFH8X34TCV9YC$h`)qsdR-=+7a7BYjN&5Y3?|7Va715%1^k
+z=NjSa930~4><#3ExK3aHj$Kg!d%ChsOUx-w<x0!sn*Kn5O|*UgeO4f517da{=Geaf
+IK4-!s0JReFT>t<8
+
+delta 61
+zcmcaGQG0%i_6CWtX8o{s{V+x#W&&bnAZFRFAI3VRbNXa)HsSVyXRJWX2E^<@%(1=T
+I8E3*H0JA6;*#H0l
+
+diff --git a/configure.ac b/configure.ac
+index ea5fa86609..6cf1dbe353 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -177,6 +177,7 @@ AC_SUBST([oc_ldflags])
+ AC_SUBST([oc_dll_ldflags])
+ AC_SUBST([cclibs])
+ AC_SUBST([native_ldflags])
++AC_SUBST([with_nonexecstack_note])
+ AC_SUBST([zstd_libs])
+ AC_SUBST([bytecode_cflags])
+ AC_SUBST([bytecode_cppflags])
+@@ -672,6 +673,8 @@ popdef([host_cpu])dnl
+ popdef([host_alias])dnl
+ popdef([host])dnl
+ 
++OCAML_WITH_NONEXECSTACK_NOTE
++
+ AS_CASE([$host],
+   [sparc-sun-solaris*],
+     [DEP_CC="false"],
+diff --git a/runtime/caml/m.h.in b/runtime/caml/m.h.in
+index 3e9ef4b0b9..2fcc9e6e2b 100644
+--- a/runtime/caml/m.h.in
++++ b/runtime/caml/m.h.in
+@@ -81,3 +81,8 @@
+ #undef SUPPORTS_TREE_VECTORIZE
+ 
+ #undef USE_MMAP_MAP_STACK
++
++#undef WITH_NONEXECSTACK_NOTE
++
++/* Define WITH_NONEXECSTACK_NOTE when an explicit ".note.GNU-stack" section
++   is to be added to indicate the stack should not be executable */
+-- 
+2.47.2
+

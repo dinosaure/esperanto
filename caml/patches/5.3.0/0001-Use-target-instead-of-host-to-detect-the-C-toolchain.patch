@@ -1,0 +1,142 @@
+From b422dae44596575fc7b4114009ca44a026821ba5 Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Thu, 22 Feb 2024 13:37:28 +0100
+Subject: [PATCH 01/21] Use `target` instead of `host` to detect the C
+ toolchain
+
+Recall that the only currently officially supported configurations are
+when `build` ~ `host` = `target`, where '~' means that the code
+generated for `host` runs on `build` even when they differ (such as when
+`build` is `x86_64-pc-cygwin` and `host` is `x86_64-pc-windows` (MSVC)
+or `x86_64-w64-mingw32`).
+
+Still, many projects use OCaml cross compilers. All those projects
+generate a cross compiler by assuming a non-cross OCaml compiler is
+available in `PATH` (where non-cross means generating code that will run
+on `host`). For the cross compiler, a C compiler and binutils for
+`target` are necessary to build the target runtime. (Note that the
+non-cross compiler will link its own (`build`/`host`) runtime into the
+generated `.opt` cross compilers rather than the just-compiled target
+runtime.)
+
+In that setup the runtime that will be compiled to create a cross
+compiler will run only on the `target` so this commit:
+
+- sets `cross_compiling` by comparing `build` to `target` (rather than
+  to `host`), as this variable will be used later,
+- uses `target` to set up the tool prefix,
+- temporarily assigns `host*` values to `target*` values during the
+  libtool configuration, as this detects a `build` to `host` toolchain.
+
+Note that all these changes are transparent when `host` = `target`.
+---
+ configure    | Bin 659478 -> 660523 bytes
+ configure.ac |  26 ++++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
+
+diff --git a/configure b/configure
+index 401b94298e4f34946677a409560ce1832c5bbbbc..e407887556f95b1a0cf36e89b4801af172231845 100755
+GIT binary patch
+delta 2466
+zcmZ`(eQXp(6wl2^uRV%@6xy^<h8_gcdX<V&tQ4(9LeN-6NiCx1_HM4-xVL-k?$Lrk
+zTTDPmT1`MF6cbBO6b#rXGC_?PL0ST+#3%~<VS>gW@)cr(2*KIA8H65fy2-ou`Fp?j
+z-n`W_^}`RQw(s__uC}_R)VB2~B@x?loN&a7Cv-zMn}}vci53aFmSuz!HjU}6WT|HB
+zTBAW7;^=0C61SO>TH<*`nl;@dx)TVJq(h@ZN1CWfZOs*4n%zWQ60t;)mS$>_#-wgU
+zQzb}bwpUfyysFd=3<6PYS^+&qT<W-_wPaE{Q&=-}%_$)ht4S-{x5qbTWGbOjd)l29
+z{z4qrmNim#Y(`c=P{iKm<An}Nmx{?<Mx8)RPye&4<NcEdQBZvwhLCXN8@hbkE8ALh
+z!yr-W(uhm6bcZ3=3N>2-`K=T+Cf&g#n53>&iyMNvRQET@AT5-b)FX2c&4S!iHz`A!
+zlQv=}O;?Xo;#eY1<Z@{|VcB9}#xj8`rkj*_U`oXhjii{M=8(AN6(ljsmNU9(6iM7>
+z&Gib1R0-QkP~mgSoCQcTrZ**R8Z9SJTJFo<GKc`LM711v(iEHGcwJ~Vy=CZ`ji$=!
+zj@TdK+M4MkM1bk0fr;LePEs?xy&@6Kq2;XNpl_g1?t<lHEC{Ra^NqtPJ73)As~Me^
+zS;vd;87Ut7*QfFNlfHFh?r3|IzjDcUJtxD)MckO;>~!fV<*cJKtC9x`!Hvh#u6*)K
+zpet9(dkj!JDkB9GDW>t&t3dI%T*;H*Kd!MQ?fxQm?{VN~N4i0=j62s2mavb0$<E<)
+zGe}^m)i#6Y*^VAS*s0B+i0ykD<nrZPz!e}fhQ&~IlO<jQW7+GKD35P@7pxwZ0fl$;
+zg2gDU=D+R+M`eEA`x%%4r2fnopetL-%fA5-6{S&^Jmf8h86c^dkn~ybjfcQQ+5aHA
+zr}5c8fzN$1)3xJ3AD)&o{LcRlW{n)e_Q?QvKQM&tv=2U@@)tokTFDg%_R0>}Z@I8t
+zLTDNePnAh|?t`#Qxw}<xyX1<Kxv)SI!Gt`MJM-Wf#YXsPIAN$B{9$N8iPN_o7IW4J
+zJBI?kGY;Pz%67OF)(vIb`YMdw!6v3!As!`oC!$ie1Djyg2-&#+*RMK1vIB0Cx5Ash
+zgn4rRd0QV`7?jOCQibx^*+1d^^7pm@xR|Xv3+Kz<D{4^#TYDA;S;HJOo=5+JIg$sS
+zxBz2{%<r$le17o~jLG$54Ff6#7b!~>cOs^qm0pEgC0r4AkGv^<V;D-5Wo|qd8^23!
+zuYmhwmV{PNgEX0DMGd;Hx)zA1kCpn58_-OpKeq_A6-vF8MC(<`Yc1%cT7eVos9POP
+z%Nq2sI;Oqr(J|%IxdC<GrRvtA>wr&r51p6q6YJfNN?F?vD4Wm!8bwrXq1F8|X53-4
+zMbYuqx9IV-nh9|dzwbL#MHI#hXqLjb>k>Mxa&5efUdRolk2buNno-OC|8|M^^WIc>
+zzpi*T#6`1FIjH2*S$MD7t}6j-$hx6CT*B84!&_8;Lh*;J#q!7Eza^Xz`8U=4p8}kt
+zpy49iakunY7s4U69ebzYg>q7SR3*-rm&MEG;ET$qcpk1%c^c>AsFDvofoDsZ1?uo~
+zBW1VZ8H^gya>rs57vLa^Ex?!gnx}B5f;;?KJb{Jl@d!R=0Y0b*6WV@N@#lJcK<VFU
+zz>9(s`Lz|eUk$sj16Qd5qc`yC>5?h&?&R~H{dlh0@iTq+yo^85k9(wg?aHHAd|Bf2
+Oi!Yn6JesrV(f<Gm^M=X*
+
+delta 1275
+zcmX|AdrZ_v5YBIB=k7SE$AP>d9N46$P!i&!L@2gCYSk87c~nIdJt1P$(;R<j+A0_t
+zA~6?(w5vp@nu-)FF_E~IL{qf^R5ZaqOi*Ktj~G<6i4ygaqurZ1{bQ4FznS^w+uhj{
+zUDJL&JgvUhQUN`8pLOh0RdLyRny|s=uUq5uJ8Nq^b=Cel&-Sbj4W+8CSZQE@Zn$E7
+z5vQt>?R)gnyH;O3L1kd9?s{c~qTcWGwD&)&H{BK%{3us7+_KHkCFw$ZNir+FA`nez
+z%qQl#!&S}te1k}*F6v&pSQw6~oDQ*#K<e+JLWep;GE$Y<wgI8O<KpxrHWWN9awL)2
+zXT>#644o6R1abL)i-3dB)j<I=F>EZWz*D!OdW+NJ@vik(d%{Q6qeCJynhhNo5q%bw
+ze1BWie!yM685M;w3=@LlxRc>xgqfV$XoEOLhwN~QI;!ttpq_MY#=xCyRqS-e>48E>
+z<-EtA!5@<-{L3OpBDcz*eEnnzj5^fj`!>72QwpgO1C8sz2daOM!=+^n{6+?vb>22;
+zjd)r1BP@-;+$N}rz|0otioo)AC~%R2G77P}_fP0%E8ZSB7)MsDi!ddMP|8&(n;On`
+ztKH9Gc9>Hao<k=EH@$$PpswvR!M!0^q$YxJOuJseM%LRo4nIlm6di=3ceShZi6C4T
+z@9UmXz$7Q?)(MDrlXQ<uZq25EdE-1?S|Hm5+0a&z9I&zK$b4Bw+0z%u5cO2X(h40|
+zC~w76U~{F+XEWWa<*pPe)3bNTojexjevr3$EZQ4o8xKukvz)_&R3DJT94%L}Z8Etb
+z{o+p9l0n;D1M*|F^^$bx#D3}JPKK+sQ}?m!@(2y8+J8eXA?m>mx!OZV*QGCIF574t
+zmk+qs_gYrc*HFWNY4rMF22`DomRUMg;$Kca`J>5L#fK?(p>{B7V1l|i1zqZ75@zUi
+zNvQZzCX#WSy1z-m$K2>)8b<Mjp2<LeEJe5H;V1mBx@TZn<c|A4$5@?JfN%N7dcMMc
+zBlDN}HO^%J6~(xo(Ldi}5g}zS!R4g7z65)iidl{sYK{+GdO<n%vk$`!M)XE2@GO&^
+zmAG;$6=MSq(g?Zry`M3M-axxsarblz9~i(&sXCm_B;^{y5#q*%@G!k!Q_C=#Wi!ie
+MmP5A;M;)B|Kf&?R{Qv*}
+
+diff --git a/configure.ac b/configure.ac
+index 64e6d7e160..18b0681d26 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -295,6 +295,17 @@ AC_CANONICAL_BUILD
+ AC_CANONICAL_HOST
+ AC_CANONICAL_TARGET
+ 
++# Override cross_compiling and ac_tool_prefix variables since the C toolchain is
++# used to generate target code when building a cross compiler
++cross_compiling=no
++AS_IF([test x"$target_alias" != x],
++  [AS_IF([test x"$build_alias" = x],
++    [cross_compiling=maybe],
++    [AS_IF([test x"$build_alias" != x"$target_alias"],
++      [cross_compiling=yes])])])
++AS_IF([test -n "$target_alias"],
++  [ac_tool_prefix=$target_alias-])
++
+ # Ensure that AC_CONFIG_LINKS will either create symlinks which are compatible
+ # with native Windows (i.e. NTFS symlinks, not WSL or Cygwin-emulated ones) or
+ # use its fallback mechanisms. Native Windows versions of ocamlc/ocamlopt cannot
+@@ -612,6 +623,16 @@ AS_IF([test x"$enable_ocamldoc" = "xno"],
+ # Allow the MSVC linker to be found even if ld isn't installed.
+ # User-specified LD still takes precedence.
+ AC_CHECK_TOOLS([LD],[ld link])
++# libtool will detect a build-to-host C toolchain but when building an OCaml
++# cross compiler we need the C toolchain to build the target runtime so we
++# temporarily define host* values as macros for target* values so that the
++# proper toolchain is configured. Note that host=target unless we are building a
++# cross compiler so this is transparent for the usual use case.
++pushdef([host], target)dnl
++pushdef([host_alias], target_alias)dnl
++pushdef([host_cpu], target_cpu)dnl
++pushdef([host_vendor], target_vendor)dnl
++pushdef([host_os], target_os)dnl
+ # libtool expects host_os=mingw for native Windows
+ # Also, it has been observed that, on some platforms (e.g. msvc) LT_INIT
+ # alters the CFLAGS variable, so we save its value before calling the macro
+@@ -622,6 +643,11 @@ saved_CFLAGS="$CFLAGS"
+ LT_INIT
+ CFLAGS="$saved_CFLAGS"
+ host_os=$old_host_os
++popdef([host_os])dnl
++popdef([host_vendor])dnl
++popdef([host_cpu])dnl
++popdef([host_alias])dnl
++popdef([host])dnl
+ 
+ AS_CASE([$host],
+   [sparc-sun-solaris*],
+-- 
+2.47.2
+

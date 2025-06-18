@@ -1,0 +1,112 @@
+From c27c0945ea345fd7a2044f2629575d015838201a Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Wed, 5 Feb 2025 13:49:03 +0100
+Subject: [PATCH 12/21] Include `asm.h` at the beginning of assembler sources
+
+---
+ runtime/amd64.S | 3 +--
+ runtime/arm64.S | 3 +--
+ runtime/power.S | 1 +
+ runtime/riscv.S | 3 +--
+ runtime/s390x.S | 3 +--
+ 5 files changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/runtime/amd64.S b/runtime/amd64.S
+index c646f944df..32364d7042 100644
+--- a/runtime/amd64.S
++++ b/runtime/amd64.S
+@@ -19,6 +19,7 @@
+ /* PIC mode support based on contribution by Paul Stravers (see PR#4795) */
+ 
+ #include "caml/m.h"
++#include "caml/asm.h"
+ 
+ #if defined(SYS_macosx)
+ 
+@@ -81,8 +82,6 @@
+ #define ENDFUNCTION(name)
+ #endif
+ 
+-#include "../runtime/caml/asm.h"
+-
+ #ifdef WITH_FRAME_POINTERS
+ #define FRAME_POINTER_SIZE   8
+ #else
+diff --git a/runtime/arm64.S b/runtime/arm64.S
+index b3a475454d..2153558d30 100644
+--- a/runtime/arm64.S
++++ b/runtime/arm64.S
+@@ -19,6 +19,7 @@
+ /* Must be preprocessed by cpp */
+ 
+ #include "caml/m.h"
++#include "caml/asm.h"
+ 
+ /* Special registers */
+ 
+@@ -152,8 +153,6 @@ G(name):
+         .size   G(name), .-G(name)
+ #endif
+ 
+-#include "../runtime/caml/asm.h"
+-
+ /* Function prologue and epilogue */
+ 
+ .macro ENTER_FUNCTION
+diff --git a/runtime/power.S b/runtime/power.S
+index e05a612f28..e3e4bbe4af 100644
+--- a/runtime/power.S
++++ b/runtime/power.S
+@@ -14,6 +14,7 @@
+ /**************************************************************************/
+ 
+ #include "caml/m.h"
++#include "caml/asm.h"
+ 
+         .abiversion 2
+ 
+diff --git a/runtime/riscv.S b/runtime/riscv.S
+index a3b796bc53..03bb93e020 100644
+--- a/runtime/riscv.S
++++ b/runtime/riscv.S
+@@ -17,6 +17,7 @@
+ /* Must be preprocessed by cpp */
+ 
+ #include "caml/m.h"
++#include "caml/asm.h"
+ 
+ #define DOMAIN_STATE_PTR s11
+ #define TRAP_PTR s1
+@@ -104,8 +105,6 @@ name:
+ #define END_OBJECT(name) \
+         .size   name, .-name
+ 
+-#include "../runtime/caml/asm.h"
+-
+ /* Function prologue and epilogue */
+ 
+ .macro ENTER_FUNCTION
+diff --git a/runtime/s390x.S b/runtime/s390x.S
+index e67765bca2..917c0592dc 100644
+--- a/runtime/s390x.S
++++ b/runtime/s390x.S
+@@ -16,6 +16,7 @@
+ /**************************************************************************/
+ 
+ #include "caml/m.h"
++#include "caml/asm.h"
+ 
+ /* Special registers */
+ 
+@@ -130,8 +131,6 @@ caml_hot.code_end:
+ #define DW_REG_r12                12
+ #define DW_REG_r15                15
+ 
+-#include "../runtime/caml/asm.h"
+-
+ /******************************************************************************/
+ /* Access to the current domain state block. */
+ /******************************************************************************/
+-- 
+2.47.2
+

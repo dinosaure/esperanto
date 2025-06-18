@@ -1,0 +1,39 @@
+From 2787f4b4fa1ba52ea34b1805a7c9e33207d31e66 Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Tue, 7 Jan 2025 13:50:21 +0100
+Subject: [PATCH 11/21] Add a dummy `caml_debugger_saved_instruction` when
+ `HAS_SOCKETS` is false
+
+The `caml_debugger_saved_instruction` function is called unconditionally
+in `runtime/interp.c` to implement the debugger-specific instructions.
+This patch provides a dummy implementation for that function, alongside
+the other `caml_debugger_*` functions, so that the interpreter can be
+built in the uncommon setups with no available socket implementation.
+---
+ runtime/debugger.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/runtime/debugger.c b/runtime/debugger.c
+index 45ba7a6cbf..439d65c4c5 100644
+--- a/runtime/debugger.c
++++ b/runtime/debugger.c
+@@ -43,6 +43,16 @@ void caml_debugger_init(void)
+ {
+ }
+ 
++opcode_t caml_debugger_saved_instruction(code_t pc)
++{
++  /* Raise a fatal error in the should-not-happen case where this function
++   * would be called without a socket, so that the execution does not branch
++   * to opcode 0 */
++  caml_fatal_error("cannot execute debugger instructions"
++                   " without a debugger connection socket\n");
++  return 0;
++}
++
+ void caml_debugger(enum event_kind event, value param)
+ {
+ }
+-- 
+2.47.2
+

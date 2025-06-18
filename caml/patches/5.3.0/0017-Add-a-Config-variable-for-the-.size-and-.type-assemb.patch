@@ -1,0 +1,70 @@
+From fdee2b8d534fae3fcc40ca2f671df4b43939af0b Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Fri, 31 Jan 2025 18:33:42 +0100
+Subject: [PATCH 17/21] Add a `Config` variable for the `.size` and `.type`
+ assembler directives
+
+Add a `Config.asm_size_type_directives` variable to indicate whether the
+`.size` and `.type` assembler directives can be used in assembler code
+---
+ utils/config.common.ml.in    | 1 +
+ utils/config.fixed.ml        | 1 +
+ utils/config.generated.ml.in | 1 +
+ utils/config.mli             | 5 +++++
+ 4 files changed, 8 insertions(+)
+
+diff --git a/utils/config.common.ml.in b/utils/config.common.ml.in
+index 03a03c9225..8b62216b7d 100644
+--- a/utils/config.common.ml.in
++++ b/utils/config.common.ml.in
+@@ -99,6 +99,7 @@ let configuration_variables () =
+   p "system" system;
+   p "asm" asm;
+   p_bool "asm_cfi_supported" asm_cfi_supported;
++  p_bool "asm_size_type_directives" asm_size_type_directives;
+   p_bool "with_frame_pointers" with_frame_pointers;
+   p_bool "with_nonexecstack_note" with_nonexecstack_note;
+   p "ext_exe" ext_exe;
+diff --git a/utils/config.fixed.ml b/utils/config.fixed.ml
+index ab9b533d46..10c7fcd349 100644
+--- a/utils/config.fixed.ml
++++ b/utils/config.fixed.ml
+@@ -60,6 +60,7 @@ let model = "default"
+ let system = "unknown"
+ let asm = boot_cannot_call "the assembler"
+ let asm_cfi_supported = false
++let asm_size_type_directives = false
+ let with_frame_pointers = false
+ let reserved_header_bits = 0
+ let ext_exe = ".ex_The boot compiler should not be using Config.ext_exe"
+diff --git a/utils/config.generated.ml.in b/utils/config.generated.ml.in
+index 009e402f93..10bd9f9576 100644
+--- a/utils/config.generated.ml.in
++++ b/utils/config.generated.ml.in
+@@ -74,6 +74,7 @@ let system = {@QS@|@system@|@QS@}
+ 
+ let asm = {@QS@|@AS@|@QS@}
+ let asm_cfi_supported = @asm_cfi_supported@
++let asm_size_type_directives = @asm_size_type_directives@
+ let with_frame_pointers = @frame_pointers@
+ let reserved_header_bits = @reserved_header_bits@
+ 
+diff --git a/utils/config.mli b/utils/config.mli
+index c08bee00bf..a3a7268f11 100644
+--- a/utils/config.mli
++++ b/utils/config.mli
+@@ -176,6 +176,11 @@ val asm: string
+ val asm_cfi_supported: bool
+ (** Whether assembler understands CFI directives *)
+ 
++val asm_size_type_directives: bool
++(** Whether the [.size] and [.type] assembler directives can be used
++
++    @since 5.4 *)
++
+ val with_frame_pointers : bool
+ (** Whether assembler should maintain frame pointers *)
+ 
+-- 
+2.47.2
+
