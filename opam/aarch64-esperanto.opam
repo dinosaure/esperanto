@@ -18,6 +18,7 @@ depends: [
   "ocaml-src" {build}
   "esperanto-cosmopolitan" {= version & build}
   "ocaml" {>= "5.3.0" & < "5.4.0"}
+  "opam-installer"
 ]
 synopsis: "An OCaml compiler with Cosmopolitan"
 description:
