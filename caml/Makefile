@@ -6,6 +6,9 @@ default: all
 
 TOP=$(abspath .)
 
+_build:
+	mkdir -p $@
+
 # TOOLCHAIN
 # We create prefix-gcc even when the actual compiler will be Clang because
 # autoconf toolchain detection will pick the first compiler that exists in the
