@@ -68,7 +68,7 @@ ocaml:
 	cp -r "$$(ocamlfind query ocaml-src)" $@
 	VERSION="$$(head -n1 ocaml/VERSION)" ; \
 	if test -d "patches/$$VERSION" ; then \
-	  git apply -v --directory=$@ "patches/$$VERSION"/*; \
+	  git apply -v --unsafe-paths --directory=$@ "patches/$$VERSION"/*; \
 	fi
 
 ocaml/Makefile.config: $(LIBS) $(TOOLCHAIN_FOR_BUILD) | ocaml
