@@ -9,6 +9,8 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     steps:
     - uses: actions/checkout@v2
+      with:
+        lfs: true
     - uses: ocaml/setup-ocaml@v3
       with:
         ocaml-compiler: ${{ matrix.ocaml-version }}
