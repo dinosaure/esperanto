@@ -17,7 +17,7 @@ depends: [
   "conf-which" {build}
   "ocaml-src" {build}
   "esperanto-cosmopolitan" {= version & build}
-  "ocaml" {>= "4.13.0" & < "4.15.0"}
+  "ocaml" {>= "5.3.0" & < "5.4.0"}
 ]
 synopsis: "An OCaml compiler with Cosmopolitan"
 description:
