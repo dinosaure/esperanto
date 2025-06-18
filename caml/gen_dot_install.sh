@@ -30,16 +30,10 @@ main() {
   printf ']\n'
 
   printf '%s: [\n' lib_root
-  install_file _build/esperanto.conf findlib.conf.d/esperanto.conf
+  install_file _build/$ARCH-esperanto.conf findlib.conf.d/$ARCH-esperanto.conf
   printf ']\n'
 
   printf '%s: [\n' lib
-  walk_tree nolibc/include include
-  install_file nolibc/libnolibc.a lib/libnolibc.a
-  walk_tree openlibm/include include
-  walk_tree openlibm/src include .h
-  install_file openlibm/libopenlibm.a lib/libopenlibm.a
-  # dummy packages
   for pkg in nolibc threads is_esperanto; do
     install_file _build/empty-META lib/$pkg/META
   done

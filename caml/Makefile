@@ -93,18 +93,18 @@ $(OCAML_IS_BUILT): ocaml/Makefile.config | _build
 	touch $@
 
 # CONFIGURATION FILES
-_build/esperanto.conf: gen_esperanto_conf.sh $(OCAML_IS_BUILT)
+_build/$(MAKECONF_TARGET_ARCH)-esperanto.conf: gen_esperanto_conf.sh $(OCAML_IS_BUILT)
 	PREFIX="$(MAKECONF_PREFIX)" ARCH="$(MAKECONF_TARGET_ARCH)" SYSROOT="$(MAKECONF_SYSROOT)" ./gen_esperanto_conf.sh > $@
 
 _build/empty-META: | _build
 	touch $@
 
 # INSTALL
-PACKAGES := $(basename $(wildcard *.opam))
+PACKAGES := $(MAKECONF_TARGET_ARCH)-esperanto
 INSTALL_FILES := $(foreach pkg,$(PACKAGES),$(pkg).install)
 
 $(INSTALL_FILES): $(TOOLCHAIN_FINAL)
-	./gen_dot_install.sh $(TOOLCHAIN_FINAL) > $@
+	ARCH="$(MAKECONF_TARGET_ARCH)" ./gen_dot_install.sh $(TOOLCHAIN_FINAL) > $@
 
 # COMMANDS
 .PHONY: install-ocaml
@@ -113,7 +113,7 @@ install-ocaml:
 	ln -sf "$$(command -v ocamlyacc)" ocaml/yacc/ocamlyacc
 	$(MAKE) -C ocaml installcross
 
-PACKAGE := esperanto
+PACKAGE := $(MAKECONF_TARGET_ARCH)-esperanto
 .PHONY: install
 install: $(PACKAGE).install install-ocaml
 	opam-installer --prefix=$(MAKECONF_PREFIX) $<
@@ -133,7 +133,7 @@ distclean: clean
 
 .PHONY: all
 all: $(LIBS) $(OCAML_IS_BUILT) \
-     _build/esperanto.conf _build/empty-META \
+     _build/$(MAKECONF_TARGET_ARCH)-esperanto.conf _build/empty-META \
      $(TOOLCHAIN_FINAL)
 
 .PHONY: test

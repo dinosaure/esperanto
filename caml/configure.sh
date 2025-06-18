@@ -17,13 +17,13 @@ usage()
 {
     cat <<EOM 1>&2
 usage: ${prog_NAME} [ OPTIONS ]
-Configures the esperanto build system.
+Y
 Options:
     --prefix=DIR
         Installation prefix (default: /usr/local).
     --sysroot=DIR
         Installation prefix for the OCaml cross-compiler and its supporting
-        libraries (default: <installation prefix>/lib/esperanto).
+        libraries (default: <installation prefix>/lib/\$ARCH-esperanto).
     --target=TARGET
         Esperanto/Cosmopolitan compiler toolchain to use.
     --othertoolprefix=PREFIX
@@ -69,8 +69,6 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-MAKECONF_SYSROOT="${MAKECONF_SYSROOT:-$MAKECONF_PREFIX/lib/esperanto}"
-
 [ -z "${CONFIG_TARGET}" ] && die "The --target option needs to be specified."
 
 TARGET_TRIPLET="$("$CONFIG_TARGET-cc" -dumpmachine)"
@@ -88,6 +86,8 @@ case "${TARGET_TRIPLET}" in
         die "Unsupported build architecture: ${TARGET_TRIPLET}"
         ;;
 esac
+
+MAKECONF_SYSROOT="${MAKECONF_SYSROOT:-$MAKECONF_PREFIX/lib/${TARGET_ARCH}-esperanto}"
 
 cat <<EOM >Makeconf
 MAKECONF_PREFIX=${MAKECONF_PREFIX}

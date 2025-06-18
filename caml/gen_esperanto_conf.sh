@@ -43,12 +43,12 @@ checkopt() {
 # mirage tool takes care of this detail, using opam monorepo.
 
 cat << EOF
-path($ARCH-esperanto) = "$SYSROOT/lib/ocaml:$SYSROOT/lib:$PREFIX/lib"
-destdir($ARCH-esperanto) = "$PREFIX/lib"
-stdlib($ARCH-esperanto) = "$SYSROOT/lib/ocaml"
-ocamlopt($ARCH-esperanto) = "$SYSROOT/bin/ocamlopt$(checkopt ocamlopt)"
-ocamlc($ARCH-esperanto) = "$SYSROOT/bin/ocamlc$(checkopt ocamlc)"
-ocamlmklib($ARCH-esperanto) = "$SYSROOT/bin/ocamlmklib"
-ocamldep($ARCH-esperanto) = "$SYSROOT/bin/ocamldep$(checkopt tools/ocamldep)"
-ocamlcp($ARCH-esperanto) = "$SYSROOT/bin/ocamlcp"
+path(${ARCH}_esperanto) = "$SYSROOT/lib/ocaml:$SYSROOT/lib:$PREFIX/lib"
+destdir(${ARCH}_esperanto) = "$PREFIX/lib"
+stdlib(${ARCH}_esperanto) = "$SYSROOT/lib/ocaml"
+ocamlopt(${ARCH}_esperanto) = "$SYSROOT/bin/ocamlopt$(checkopt ocamlopt)"
+ocamlc(${ARCH}_esperanto) = "$SYSROOT/bin/ocamlc$(checkopt ocamlc)"
+ocamlmklib(${ARCH}_esperanto) = "$SYSROOT/bin/ocamlmklib"
+ocamldep(${ARCH}_esperanto) = "$SYSROOT/bin/ocamldep$(checkopt tools/ocamldep)"
+ocamlcp(${ARCH}_esperanto) = "$SYSROOT/bin/ocamlcp"
 EOF
