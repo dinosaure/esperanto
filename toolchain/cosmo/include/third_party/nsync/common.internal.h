@@ -9,14 +9,9 @@
 #include "third_party/nsync/mu_semaphore.h"
 #include "third_party/nsync/note.h"
 #include "third_party/nsync/time.h"
+#include "third_party/nsync/defs.h"
 #include "third_party/nsync/wait_s.internal.h"
 COSMOPOLITAN_C_START_
-
-#ifdef MODE_DBG
-#define NSYNC_DEBUG 1
-#else
-#define NSYNC_DEBUG 0
-#endif
 
 /* Yield the CPU. Platform specific. */
 void nsync_yield_(void);
@@ -154,7 +149,7 @@ extern lock_type *nsync_reader_type_;
 
 /* ---------- */
 
-/* Hold a pair of  condition function and its argument. */
+/* Hold a pair of condition function and its argument. */
 struct wait_condition_s {
   int (*f)(const void *v);
   const void *v;
@@ -191,18 +186,21 @@ struct wait_condition_s {
     ATM_STORE_REL (&w.waiting, 0);
     nsync_mu_semaphore_v (&w.sem); */
 typedef struct waiter_s {
-  uint32_t tag; /* debug DLL_NSYNC_WAITER, DLL_WAITER, DLL_WAITER_SAMECOND */
-  int flags;    /* see WAITER_* bits below */
-  nsync_semaphore sem;       /* Thread waits on this semaphore. */
-  struct nsync_waiter_s nw;  /* An embedded nsync_waiter_s. */
-  struct nsync_mu_s_ *cv_mu; /* pointer to nsync_mu associated with a cv wait */
-  lock_type
-      *l_type; /* Lock type of the mu, or nil if not associated with a mu. */
-  nsync_atomic_uint32_ remove_count; /* count of removals from queue */
+#if NSYNC_DEBUG
+  uint32_t tag;                      /* Debug DLL_NSYNC_WAITER, DLL_WAITER, DLL_WAITER_SAMECOND. */
+#endif
+  int flags;                         /* See WAITER_* bits below. */
+  nsync_atomic_uint32_ remove_count; /* Monotonic count of removals from queue. */
+  nsync_semaphore sem;               /* Thread waits on this semaphore. */
+  struct nsync_waiter_s nw;          /* An embedded nsync_waiter_s. */
+  struct nsync_mu_s_ *cv_mu;         /* Pointer to nsync_mu associated with a cv wait. */
+  lock_type *l_type;                 /* Lock type of the mu, or nil if not associated with a mu. */
   struct wait_condition_s cond;      /* A condition on which to acquire a mu. */
-  struct Dll same_condition;         /* Links neighbours in nw.q with same
-                                        non-nil condition. */
+  struct Dll same_condition;         /* Links neighbours in nw.q with same non-nil condition. */
+  struct waiter_s * next_all;
   struct waiter_s * next_free;
+  struct nsync_mu_s_ *wipe_mu;
+  struct nsync_cv_s_ *wipe_cv;
 } waiter;
 static const uint32_t WAITER_TAG = 0x0590239f;
 static const uint32_t NSYNC_WAITER_TAG = 0x726d2ba9;
@@ -246,6 +244,7 @@ void nsync_waiter_free_(waiter *w);
    discipline.  */
 struct nsync_note_s_ {
   struct Dll parent_child_link; /* parent's children, under parent->note_mu  */
+  int clock; /* system clock that should be used */
   int expiry_time_valid; /* whether expiry_time is valid; r/o after init */
   nsync_time
       expiry_time;  /* expiry time, if expiry_time_valid != 0; r/o after init */
@@ -266,7 +265,7 @@ void nsync_mu_unlock_slow_(nsync_mu *mu, lock_type *l_type);
 struct Dll *nsync_remove_from_mu_queue_(struct Dll *mu_queue, struct Dll *e);
 void nsync_maybe_merge_conditions_(struct Dll *p, struct Dll *n);
 nsync_time nsync_note_notified_deadline_(nsync_note n);
-int nsync_sem_wait_with_cancel_(waiter *w, nsync_time abs_deadline,
+int nsync_sem_wait_with_cancel_(waiter *w, int clock, nsync_time abs_deadline,
                                 nsync_note cancel_note);
 
 COSMOPOLITAN_C_END_

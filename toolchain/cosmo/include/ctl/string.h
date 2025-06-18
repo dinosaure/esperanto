@@ -125,6 +125,7 @@ class string
     void append(char, size_t) noexcept;
     void append(unsigned long) noexcept;
     void append(const void*, size_t) noexcept;
+    void append(const ctl::string_view&, size_t, size_t = npos) noexcept;
     string& insert(size_t, ctl::string_view) noexcept;
     string& erase(size_t = 0, size_t = npos) noexcept;
     string substr(size_t = 0, size_t = npos) const noexcept;
@@ -136,6 +137,10 @@ class string
     bool starts_with(ctl::string_view) const noexcept;
     size_t find(char, size_t = 0) const noexcept;
     size_t find(ctl::string_view, size_t = 0) const noexcept;
+    size_t find_first_of(char, size_t = 0) const noexcept;
+    size_t find_first_of(ctl::string_view, size_t = 0) const noexcept;
+    size_t find_last_of(char, size_t = npos) const noexcept;
+    size_t find_last_of(ctl::string_view, size_t = npos) const noexcept;
 
     void swap(string& s) noexcept
     {
@@ -302,7 +307,7 @@ class string
         append(ch);
     }
 
-    void append(const ctl::string_view s) noexcept
+    void append(const ctl::string_view& s) noexcept
     {
         append(s.p, s.n);
     }

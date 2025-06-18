@@ -1,6 +1,7 @@
 #ifndef COSMOPOLITAN_LIBC_THREAD_WAIT_INTERNAL_H_
 #define COSMOPOLITAN_LIBC_THREAD_WAIT_INTERNAL_H_
 #include "libc/intrin/dll.h"
+#include "third_party/nsync/defs.h"
 #include "third_party/nsync/atomic.h"
 COSMOPOLITAN_C_START_
 
@@ -10,17 +11,19 @@ COSMOPOLITAN_C_START_
    with v pointing to the client's object and nw pointing to a struct
    nsync_waiter_s. */
 struct nsync_waiter_s {
+#if NSYNC_DEBUG
   uint32_t tag;                   /* used for debugging */
+#endif
   uint32_t flags;                 /* see below */
-  struct Dll q;                   /* used to link children of parent */
   nsync_atomic_uint32_ waiting;   /* non-zero <=> the waiter is waiting */
+  struct Dll q;                   /* used to link children of parent */
   struct nsync_semaphore_s_ *sem; /* *sem will be Ved when waiter is woken */
 };
 
 /* set if waiter is embedded in Mu/CV's internal structures */
 #define NSYNC_WAITER_FLAG_MUCV 0x1
 
-void nsync_waiter_destroy(void *);
+void nsync_waiter_destroy_(void *);
 
 COSMOPOLITAN_C_END_
 #endif /* COSMOPOLITAN_LIBC_THREAD_WAIT_INTERNAL_H_ */

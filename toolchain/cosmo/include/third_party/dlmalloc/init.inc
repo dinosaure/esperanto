@@ -1,68 +1,51 @@
 #include "libc/sysv/consts/auxv.h"
 #include "libc/runtime/runtime.h"
+#include "libc/nexgen32e/rdtsc.h"
 #include "libc/runtime/runtime.h"
 
-/* ---------------------------- setting mparams -------------------------- */
-
-#if LOCK_AT_FORK
+void dlmalloc_pre_fork(void) {
 #if ONLY_MSPACES
-
-static void dlmalloc_pre_fork(void) {
   mstate h;
-  for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
+  for (unsigned i = ARRAYLEN(g_heaps); i--;)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
       ACQUIRE_LOCK(&h->mutex);
+#else
+  ACQUIRE_LOCK(&(gm)->mutex);
+#endif
 }
 
-static void dlmalloc_post_fork_parent(void) {
+void dlmalloc_post_fork_parent(void) {
+#if ONLY_MSPACES
   mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
       RELEASE_LOCK(&h->mutex);
+#else
+  RELEASE_LOCK(&(gm)->mutex);
+#endif
 }
 
-static void dlmalloc_post_fork_child(void) {
+void dlmalloc_post_fork_child(void) {
+#if ONLY_MSPACES
   mstate h;
   for (unsigned i = 0; i < ARRAYLEN(g_heaps); ++i)
     if ((h = atomic_load_explicit(&g_heaps[i], memory_order_acquire)))
-      (void)INITIAL_LOCK(&h->mutex);
-}
-
+      REFRESH_LOCK(&h->mutex);
 #else
-static void dlmalloc_pre_fork(void)         { ACQUIRE_LOCK(&(gm)->mutex); }
-static void dlmalloc_post_fork_parent(void) { RELEASE_LOCK(&(gm)->mutex); }
-static void dlmalloc_post_fork_child(void)  { (void)INITIAL_LOCK(&(gm)->mutex); }
-#endif /* ONLY_MSPACES */
-#endif /* LOCK_AT_FORK */
+  REFRESH_LOCK(&(gm)->mutex);
+#endif
+}
 
 /* Initialize mparams */
 __attribute__((__constructor__(49))) int init_mparams(void) {
-#ifdef NEED_GLOBAL_LOCK_INIT
-  if (malloc_global_mutex_status <= 0)
-    init_malloc_global_mutex();
-#endif
 
-  // ACQUIRE_MALLOC_GLOBAL_LOCK();
   if (mparams.magic == 0) {
     size_t magic;
     size_t psize;
     size_t gsize;
 
-#if defined(__COSMOPOLITAN__)
-    psize = getpagesize();
+    psize = __pagesize;
     gsize = DEFAULT_GRANULARITY ? DEFAULT_GRANULARITY : psize;
-#elif !defined(WIN32)
-    psize = malloc_getpagesize;
-    gsize = ((DEFAULT_GRANULARITY != 0)? DEFAULT_GRANULARITY : psize);
-#else /* WIN32 */
-    {
-      SYSTEM_INFO system_info;
-      GetSystemInfo(&system_info);
-      psize = system_info.dwPageSize;
-      gsize = ((DEFAULT_GRANULARITY != 0)?
-               DEFAULT_GRANULARITY : system_info.dwAllocationGranularity);
-    }
-#endif /* WIN32 */
 
     /* Sanity-check configuration:
        size_t must be unsigned and as wide as pointer type.
@@ -83,22 +66,12 @@ __attribute__((__constructor__(49))) int init_mparams(void) {
     mparams.page_size = psize;
     mparams.mmap_threshold = DEFAULT_MMAP_THRESHOLD;
     mparams.trim_threshold = DEFAULT_TRIM_THRESHOLD;
-#if MORECORE_CONTIGUOUS
-    mparams.default_mflags = USE_LOCK_BIT|USE_MMAP_BIT;
-#else  /* MORECORE_CONTIGUOUS */
     mparams.default_mflags = USE_LOCK_BIT|USE_MMAP_BIT|USE_NONCONTIGUOUS_BIT;
-#endif /* MORECORE_CONTIGUOUS */
 
 #if !ONLY_MSPACES
     /* Set up lock for main malloc area */
     gm->mflags = mparams.default_mflags;
     (void)INITIAL_LOCK(&gm->mutex);
-#endif
-
-#if LOCK_AT_FORK
-    pthread_atfork(&dlmalloc_pre_fork,
-                   &dlmalloc_post_fork_parent,
-                   &dlmalloc_post_fork_child);
 #endif
 
     {
@@ -113,15 +86,13 @@ __attribute__((__constructor__(49))) int init_mparams(void) {
       }
       else
 #endif /* USE_DEV_RANDOM */
-      magic = (size_t)(_rand64() ^ (size_t)0x55555555U);
+      magic = (size_t)(rdtsc() ^ (size_t)0x55555555U);
       magic |= (size_t)8U;    /* ensure nonzero */
       magic &= ~(size_t)7U;   /* improve chances of fault for bad values */
       /* Until memory modes commonly available, use volatile-write */
       (*(volatile size_t *)(&(mparams.magic))) = magic;
     }
   }
-
-  // RELEASE_MALLOC_GLOBAL_LOCK();
 
 #if ONLY_MSPACES
   threaded_dlmalloc();

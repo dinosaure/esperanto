@@ -21,6 +21,7 @@ extern const struct MagnumStr kErrnoDocs[];
 extern const struct MagnumStr kErrnoNames[];
 extern const struct MagnumStr kFcntlCmds[];
 extern const struct MagnumStr kIpOptnames[];
+extern const struct MagnumStr kIpv6Optnames[];
 extern const struct MagnumStr kOpenFlags[];
 extern const struct MagnumStr kRlimitNames[];
 extern const struct MagnumStr kSignalNames[];
@@ -28,7 +29,8 @@ extern const struct MagnumStr kSockOptnames[];
 extern const struct MagnumStr kTcpOptnames[];
 extern const struct MagnumStr kPollNames[];
 
-const char *DescribeMagnum(char *, const struct MagnumStr *, const char *, int);
+const char *_DescribeMagnum(char *, const struct MagnumStr *, const char *,
+                            int);
 
 __funline const char *GetMagnumStr(const struct MagnumStr *ms, int x) {
   int i;

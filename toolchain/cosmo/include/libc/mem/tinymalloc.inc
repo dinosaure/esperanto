@@ -16,8 +16,9 @@
 #include "libc/assert.h"
 #include "libc/dce.h"
 #include "libc/errno.h"
+#include "libc/intrin/kprintf.h"
 #include "libc/mem/mem.h"
-#include "libc/stdalign.internal.h"
+#include "libc/stdalign.h"
 #include "libc/stdckdint.h"
 #include "libc/str/str.h"
 
@@ -48,6 +49,10 @@ static void tinymalloc_init(void) {
   heap.memory = (char *)(((uintptr_t)heap.bits + align - 1) & -align);
   heap.size = sizeof(heap.bits) - (heap.memory - heap.bits);
   heap.once = 1;
+}
+
+__attribute__((__destructor__)) static void destroy(void) {
+  kprintf("used = %'zu\n", heap.used);
 }
 
 static inline int isheap(char *mem) {

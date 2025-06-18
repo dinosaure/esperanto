@@ -10,12 +10,11 @@ COSMOPOLITAN_C_START_
 
 struct CosmoFtrace {   /* 16 */
   char ft_once;        /*  0 */
-  char ft_noreentry;   /*  1 */
   int ft_skew;         /*  4 */
   int64_t ft_lastaddr; /*  8 */
 };
 
-/* cosmopolitan thread information block (512 bytes) */
+/* cosmopolitan thread information block (1024 bytes) */
 /* NOTE: update aarch64 libc/errno.h if sizeof changes */
 /* NOTE: update aarch64 libc/proc/vfork.S if sizeof changes */
 /* NOTE: update aarch64 libc/nexgen32e/gc.S if sizeof changes */
@@ -23,10 +22,10 @@ struct CosmoTib {
   struct CosmoTib *tib_self;      /* 0x00 */
   struct CosmoFtrace tib_ftracer; /* 0x08 */
   void *tib_garbages;             /* 0x18 */
-  intptr_t tib_locale;            /* 0x20 */
+  _Atomic(int32_t) tib_ptid;      /* 0x20 transitions 0 → tid */
   intptr_t tib_pthread;           /* 0x28 */
   struct CosmoTib *tib_self2;     /* 0x30 */
-  _Atomic(int32_t) tib_tid;       /* 0x38 transitions -1 → tid → 0 */
+  _Atomic(int32_t) tib_ctid;      /* 0x38 transitions -1 → tid → 0 */
   int32_t tib_errno;              /* 0x3c */
   uint64_t tib_flags;             /* 0x40 */
   int tib_ftrace;                 /* inherited */
@@ -40,9 +39,9 @@ struct CosmoTib {
   void *tib_nsync;
   void *tib_atexit;
   _Atomic(void *) tib_keys[46];
+  void *tib_locks[64];
 } __attribute__((__aligned__(64)));
 
-extern int __threaded;
 extern char __tls_morphed;
 extern unsigned __tls_index;
 
@@ -78,6 +77,10 @@ forceinline pureconst struct CosmoTib *__get_tls(void) {
   return __tls - 1;
 #endif
 }
+
+struct CosmoTib *__get_tls_privileged(void) dontthrow pureconst;
+struct CosmoTib *__get_tls_win32(void) dontthrow;
+void __set_tls_win32(void *) libcesque;
 
 #ifdef __x86_64__
 #define __adj_tls(tib) (tib)
