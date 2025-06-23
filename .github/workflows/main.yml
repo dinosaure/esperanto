@@ -8,9 +8,10 @@ jobs:
         ocaml-version: ["5.3.0"]
     runs-on: ${{ matrix.operating-system }}
     steps:
-    - uses: actions/checkout@v4
-      with:
-        lfs: true
+    - uses: nschloe/action-cached-lfs-checkout@v1
+#    - uses: actions/checkout@v4
+#      with:
+#        lfs: true
     - uses: ocaml/setup-ocaml@v3
       with:
         ocaml-compiler: ${{ matrix.ocaml-version }}
