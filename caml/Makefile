@@ -69,6 +69,7 @@ ocaml:
 	VERSION="$$(head -n1 ocaml/VERSION)" ; \
 	if test -d "patches/$$VERSION" ; then \
 	  cd .. && \
+	  git init -q && \
 	  for p in "caml/patches/$$VERSION"/*; do \
 	    (set -x ; git apply --no-index --unsafe-path -v --directory=caml/$@ "$$p" ; echo $$?) ; \
 	  done ; \
