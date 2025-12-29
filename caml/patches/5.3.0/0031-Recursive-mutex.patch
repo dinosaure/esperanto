@@ -1,0 +1,13 @@
+diff --git a/runtime/platform.c b/runtime/platform.c
+index eaa6e18112..c30fc86e61 100644
+--- a/runtime/platform.c
++++ b/runtime/platform.c
+@@ -56,6 +56,8 @@ CAMLexport void caml_plat_mutex_init(caml_plat_mutex * m)
+   if (rc != 0) goto error1;
+   rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+   if (rc != 0) goto error2;
++  rc = pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
++  if (rc != 0) goto error2;
+   rc = pthread_mutex_init(m, &attr);
+   // fall through
+ error2:
