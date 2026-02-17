@@ -1,8 +1,0 @@
-path(@@BUILD_ARCH@@_esperanto) = "@@PREFIX@@/@@BUILD_ARCH@@-esperanto-sysroot/lib"
-destdir(@@BUILD_ARCH@@_esperanto) = "@@PREFIX@@/@@BUILD_ARCH@@-esperanto-sysroot/lib"
-stdlib(@@BUILD_ARCH@@_esperanto) = "@@PREFIX@@/@@BUILD_ARCH@@-esperanto-sysroot/lib/ocaml"
-ocamlopt(@@BUILD_ARCH@@_esperanto) = "@@PREFIX@@/@@BUILD_ARCH@@-esperanto-sysroot/bin/ocamlopt"
-ocamlc(@@BUILD_ARCH@@_esperanto) = "@@PREFIX@@/@@BUILD_ARCH@@-esperanto-sysroot/bin/ocamlc"
-ocamlmklib(@@BUILD_ARCH@@_esperanto) = "@@PREFIX@@/@@BUILD_ARCH@@-esperanto-sysroot/bin/ocamlmklib"
-ocamldep(@@BUILD_ARCH@@_esperanto) = "@@PREFIX@@/@@BUILD_ARCH@@-esperanto-sysroot/bin/ocamldep"
-ocamlcp(@@BUILD_ARCH@@_esperanto) = "@@PREFIX@@/@@BUILD_ARCH@@-esperanto-sysroot/bin/ocamlcp"

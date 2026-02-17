@@ -45,6 +45,10 @@ struct string_view
     string_view substr(size_t = 0, size_t = npos) const noexcept;
     size_t find(char, size_t = 0) const noexcept;
     size_t find(string_view, size_t = 0) const noexcept;
+    size_t find_first_of(char, size_t = 0) const noexcept;
+    size_t find_first_of(ctl::string_view, size_t = 0) const noexcept;
+    size_t find_last_of(char, size_t = npos) const noexcept;
+    size_t find_last_of(ctl::string_view, size_t = npos) const noexcept;
 
     constexpr string_view& operator=(const string_view s) noexcept
     {
@@ -109,12 +113,12 @@ struct string_view
         return p[n - 1];
     }
 
-    constexpr const_iterator begin() noexcept
+    constexpr const_iterator begin() const noexcept
     {
         return p;
     }
 
-    constexpr const_iterator end() noexcept
+    constexpr const_iterator end() const noexcept
     {
         return p + n;
     }

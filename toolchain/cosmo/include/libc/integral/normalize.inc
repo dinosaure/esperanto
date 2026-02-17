@@ -2,8 +2,8 @@
 #undef __COSMOPOLITAN__
 #endif
 
-#define __COSMOPOLITAN_MAJOR__ 3
-#define __COSMOPOLITAN_MINOR__ 6
+#define __COSMOPOLITAN_MAJOR__ 4
+#define __COSMOPOLITAN_MINOR__ 0
 #define __COSMOPOLITAN_PATCH__ 2
 #define __COSMOPOLITAN__                                                   \
   (100000000 * __COSMOPOLITAN_MAJOR__ + 1000000 * __COSMOPOLITAN_MINOR__ + \
@@ -79,6 +79,10 @@
 #undef __linux__
 #endif
 
+#ifdef __gnu_linux__
+#undef __gnu_linux__
+#endif
+
 #ifndef __BIGGEST_ALIGNMENT__
 #define __BIGGEST_ALIGNMENT__ 16
 #endif
@@ -88,6 +92,30 @@
 #elif defined(_MSC_VER) && !defined(__INT64_TYPE__)
 #include "libc/integral/llp64.inc"
 #endif
+
+#undef __INT_FAST16_MAX__
+#undef __INT_FAST16_TYPE__
+#undef __UINT_FAST16_MAX__
+#undef __INT_FAST16_WIDTH__
+#undef __UINT_FAST16_TYPE__
+
+#define __INT_FAST16_MAX__   2147483647
+#define __INT_FAST16_TYPE__  int
+#define __UINT_FAST16_MAX__  4294967295U
+#define __INT_FAST16_WIDTH__ 32
+#define __UINT_FAST16_TYPE__ unsigned int
+
+#undef __INT_FAST32_MAX__
+#undef __INT_FAST32_TYPE__
+#undef __UINT_FAST32_MAX__
+#undef __INT_FAST32_WIDTH__
+#undef __UINT_FAST32_TYPE__
+
+#define __INT_FAST32_MAX__   2147483647
+#define __INT_FAST32_TYPE__  int
+#define __UINT_FAST32_MAX__  4294967295U
+#define __INT_FAST32_WIDTH__ 32
+#define __UINT_FAST32_TYPE__ unsigned int
 
 #if !(__ASSEMBLER__ + __LINKER__ + 0)
 #ifdef __STDC__

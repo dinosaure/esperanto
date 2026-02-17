@@ -1,0 +1,72 @@
+From caefee1e892042b502e324719640bc7a603b5ca4 Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Mon, 13 Jan 2025 12:19:19 +0100
+Subject: [PATCH 14/21] Add a `Config` variable for the need of the GNU
+ non-executable stack note
+
+Add a `Config.with_nonexecstack_note` variable to indicate whether the
+`.note.GNU-stack` section should be present to mark the stack explicitly
+as non-executable
+---
+ utils/config.common.ml.in    | 1 +
+ utils/config.fixed.ml        | 1 +
+ utils/config.generated.ml.in | 1 +
+ utils/config.mli             | 6 ++++++
+ 4 files changed, 9 insertions(+)
+
+diff --git a/utils/config.common.ml.in b/utils/config.common.ml.in
+index 3603fe6c60..03a03c9225 100644
+--- a/utils/config.common.ml.in
++++ b/utils/config.common.ml.in
+@@ -100,6 +100,7 @@ let configuration_variables () =
+   p "asm" asm;
+   p_bool "asm_cfi_supported" asm_cfi_supported;
+   p_bool "with_frame_pointers" with_frame_pointers;
++  p_bool "with_nonexecstack_note" with_nonexecstack_note;
+   p "ext_exe" ext_exe;
+   p "ext_obj" ext_obj;
+   p "ext_asm" ext_asm;
+diff --git a/utils/config.fixed.ml b/utils/config.fixed.ml
+index 807b929355..ab9b533d46 100644
+--- a/utils/config.fixed.ml
++++ b/utils/config.fixed.ml
+@@ -36,6 +36,7 @@ let bytecomp_c_compiler = ""
+ let native_c_compiler = c_compiler
+ let native_c_libraries = ""
+ let native_ldflags = ""
++let with_nonexecstack_note = false
+ let native_pack_linker = boot_cannot_call "the linker"
+ let default_rpath = ""
+ let mksharedlibrpath = ""
+diff --git a/utils/config.generated.ml.in b/utils/config.generated.ml.in
+index aa03455409..009e402f93 100644
+--- a/utils/config.generated.ml.in
++++ b/utils/config.generated.ml.in
+@@ -45,6 +45,7 @@ let native_c_compiler =
+   c_compiler ^ " " ^ native_cflags ^ " " ^ native_cppflags
+ let native_c_libraries = {@QS@|@cclibs@|@QS@}
+ let native_ldflags = {@QS@|@native_ldflags@|@QS@}
++let with_nonexecstack_note = @with_nonexecstack_note@
+ let native_pack_linker = {@QS@|@PACKLD@|@QS@}
+ let default_rpath = {@QS@|@rpath@|@QS@}
+ let mksharedlibrpath = {@QS@|@mksharedlibrpath@|@QS@}
+diff --git a/utils/config.mli b/utils/config.mli
+index 51e31a3729..c08bee00bf 100644
+--- a/utils/config.mli
++++ b/utils/config.mli
+@@ -68,6 +68,12 @@ val native_c_libraries: string
+ val native_ldflags : string
+ (* Flags to pass to the system linker *)
+ 
++val with_nonexecstack_note : bool
++(** Whether an explicit ".note.GNU-stack" section is to be added to indicate
++    the stack should not be executable
++
++    @since 5.4 *)
++
+ val native_pack_linker: string
+ (** The linker to use for packaging (ocamlopt -pack) and for partial
+     links (ocamlopt -output-obj). *)
+-- 
+2.47.2
+

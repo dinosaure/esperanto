@@ -1,0 +1,43 @@
+From eda4278b853186db65dc80acb9e3633ce14c8f9c Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Thu, 3 Oct 2024 11:47:16 +0200
+Subject: [PATCH 07/21] Detect `flexlink` only on relevant targets
+
+On Unix platforms, make sure it is possible to have a `flexlink`
+executable in `PATH` (which is useful for instance when using a cross
+compiler to Windows), and still be able to configure and build a
+non-cross compiler
+---
+ configure    | Bin 704961 -> 705055 bytes
+ configure.ac |   4 +++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 21a2617e3958bd64ddfc1fb914d1c6c9b9fed1dc..8e8f2351c65874ed71a60f10a88584157cb6b08a 100755
+GIT binary patch
+delta 75
+zcmX@utUbR)yP<`#g{g(Pg{6gc3!C4?=`PZ2;?paH*?6Ygo@P^=u4cm~yFL3NTOiAH
+dp~;Lg)0G~x3AbOo$_B*jK+LiI;#JNMuL0Y&9UK4v
+
+delta 55
+zcmbQ=qJ6MgyP<`#g{g(Pg{6gc3!C4?=`J4`Ww)=t$QH;l{mv6M<#yX^Y(UHo#2njg
+JuW>$l4FF~P7dZd`
+
+diff --git a/configure.ac b/configure.ac
+index 9b0331cdee..ea5fa86609 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1074,7 +1074,9 @@ AS_IF([test x"$supports_shared_libraries" != 'xfalse'], [
+         [AC_MSG_RESULT([requested but not supported])
+         AC_MSG_ERROR([exiting])])])])
+ 
+-  AC_CHECK_PROG([flexlink],[flexlink],[flexlink])
++  AS_CASE([$target],
++    [*-*-cygwin*|*-w64-mingw32*|*-pc-windows],
++      [AC_CHECK_PROG([flexlink],[flexlink],[flexlink])])
+ 
+   AS_IF([test -n "$flexlink" && test -z "$flexdll_source_dir"],[
+     OCAML_TEST_FLEXLINK([$flexlink], [$flexdll_chain],
+-- 
+2.47.2
+

@@ -75,10 +75,38 @@ elif [ ! -d "$TMPDIR" ]; then
   fi
 fi
 
+use_gcc() {
+  CLANG=0
+  CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
+  CC_AARCH64="$BIN/aarch64-linux-cosmo-gcc"
+  CXX_X86_64="$BIN/x86_64-linux-cosmo-g++"
+  CXX_AARCH64="$BIN/aarch64-linux-cosmo-g++"
+  TARGET_X86_64=
+  TARGET_AARCH64=
+  FPORTCOSMO="-fportcosmo"
+  FNO_INLINE_FUNCTIONS_CALLED_ONCE="-fno-inline-functions-called-once"
+}
+
+use_clang() {
+  CLANG=1
+  CC_X86_64="$BIN/../libexec/clang"
+  CC_AARCH64="$BIN/../libexec/clang"
+  CXX_X86_64="$BIN/../libexec/clang"
+  CXX_AARCH64="$BIN/../libexec/clang"
+  TARGET_X86_64="--target=x86_64"
+  TARGET_AARCH64="--target=aarch64"
+  FPORTCOSMO=
+  FNO_INLINE_FUNCTIONS_CALLED_ONCE=
+}
+
+use_gcc
+
+X=
 OPT=
 ARGS=
 FLAGS=
 OUTPUT=
+NEED_X=
 MDFLAG=0
 MCOSMO=0
 INTENT=ld
@@ -91,11 +119,11 @@ FLAGS_AARCH64=
 INPUT_FILE_COUNT=0
 DEPENDENCY_OUTPUT=
 NEED_DEPENDENCY_OUTPUT=
+
 for x; do
   if [ x"$x" != x"${x#* }" ]; then
     fatal_error "arguments containing spaces unsupported: $x"
-  fi
-  if [ -n "$NEED_OUTPUT" ]; then
+  elif [ -n "$NEED_OUTPUT" ]; then
     NEED_OUTPUT=
     OUTPUT=$x
     continue
@@ -109,6 +137,10 @@ for x; do
   elif [ -n "$NEED_EQUAL" ]; then
     x="${NEED_EQUAL}=${x}"
     NEED_EQUAL=
+  elif [ -n "$NEED_X" ]; then
+    NEED_X=
+    X=$x
+    x="-x${x}"
   elif [ x"$x" = x"-" ] ||           # is alias for stdin
        [ x"$x" = x"${x#-*}" ]; then  # !startswith(x, "-")
     if [ x"$x" != x"${x%.s}" ] ||
@@ -136,10 +168,25 @@ for x; do
   elif [ x"$x" != x"${x#-MF}" ]; then  # startswith(x, "-MF")
     DEPENDENCY_OUTPUT=${x#-MF}
     continue
+  elif [ x"$x" = x"-MQ" ]; then
+    NEED_DEPENDENCY_OUTPUT=1
+    continue
+  elif [ x"$x" = x"-Wl,--version" ]; then
+    cat <<EOF
+GNU ld (GNU Binutils) 2.42
+Copyright (C) 2024 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) a later version.
+This program has absolutely no warranty.
+EOF
+    exit
   elif [ x"$x" != x"${x#-O}" ]; then  # startswith(x, "-O")
     OPT=$x
   elif [ x"$x" = x"-c" ]; then
-    INTENT=cc
+    if [ x"$INTENT" != x"cpp" ]; then
+      INTENT=cc
+    fi
+    continue
   elif [ x"$x" = x"-E" ] ||
        [ x"$x" = x"-M" ] ||
        [ x"$x" = x"-MM" ]; then
@@ -164,6 +211,14 @@ for x; do
     continue
   elif [ x"$x" = x"-moptlinux" ]; then
     MODE=optlinux
+    continue
+  elif [ x"$x" = x"-mclang" ]; then
+    use_clang
+    continue
+  elif [ x"$x" = x"-mgcc" ]; then
+    use_gcc
+    continue
+  elif [ x"$x" = x"-m64" ]; then
     continue
   elif [ x"$x" = x"-fomit-frame-pointer" ]; then
     # Quoth Apple: "The frame pointer register must always address a
@@ -210,8 +265,12 @@ for x; do
   elif [ x"$x" = x"-dumpversion" ]; then
     echo $GCC_VERSION
     Exit 0
-  elif [ x"$x" = x"-x" ] ||
-       [ x"$x" = x"-e" ] ||
+  elif [ x"$x" = x"-x" ]; then
+    NEED_X=1
+    continue
+  elif [ x"$x" != x"${x#-x}" ]; then
+    X=${x#-x}
+  elif [ x"$x" = x"-e" ] ||
        [ x"$x" = x"-z" ] ||
        [ x"$x" = x"-T" ] ||
        [ x"$x" = x"-L" ] ||
@@ -236,18 +295,47 @@ for x; do
   ARGS="$ARGS $x"
 done
 
+# precompiled header mode
+if [ $INTENT != cpp ]; then
+  if [ -z "$X" ]; then
+    ONLY_HEADER_INPUTS=1
+    for x in $ARGS; do
+      if [ x"$x" = x"${x#-*}" ] &&       # !startswith(x, "-")
+         [ x"$x" = x"${x%.h}" ] &&       # !endswith(x, ".h")
+         [ x"$x" = x"${x%.hpp}" ]; then  # !endswith(x, ".hpp")
+        ONLY_HEADER_INPUTS=0
+        break
+      fi
+    done
+    if [ $ONLY_HEADER_INPUTS -eq 1 ]; then
+      INTENT=gch
+    fi
+  elif [ x"$X" = x"c-header" ] ||
+       [ x"$X" = x"c++-header" ]; then
+    INTENT=gch
+  fi
+fi
+if [ $INTENT = gch ]; then
+  fatal_error "precompiled headers only supported with ARCH-unknown-cosmo-cc compilers"
+fi
+
+# check for incorrect usage
 if [ $INPUT_FILE_COUNT -eq 0 ]; then
   fatal_error "no input files"
-elif [ -z "$INPUT" ] &&
-     [ $INTENT != ld ] &&
-     [ $INPUT_FILE_COUNT -gt 1 ]; then
-  fatal_error "cannot specify '-o' with '-c', or '-E' with multiple files"
+elif [ -n "$OUTPUT" ] && [ $INPUT_FILE_COUNT -gt 1 ]; then
+  if [ $INTENT = cc ] || [ $INTENT = cpp ]; then
+    fatal_error "cannot specify '-o' with '-c' or '-E' with multiple files"
+  fi
+fi
+
+if [ $INTENT = ld ]; then
+  use_gcc
 fi
 
 PLATFORM="-D__COSMOPOLITAN__ -D__COSMOCC__ -D__FATCOSMOCC__"
 PREDEF="-include libc/integral/normalize.inc"
 CPPFLAGS="-fno-pie -nostdinc -isystem $BIN/../include"
-CFLAGS="-fportcosmo -fno-dwarf2-cfi-asm -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-semantic-interposition"
+CFLAGS="$FPORTCOSMO -fno-semantic-interposition"
 LDFLAGS="-static -nostdlib -no-pie -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,norelro -Wl,--gc-sections"
 PRECIOUS="-fno-omit-frame-pointer"
 
@@ -256,15 +344,24 @@ if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux"
   CFLAGS="$CFLAGS -fno-optimize-sibling-calls -mno-omit-leaf-frame-pointer"
 fi
 if [ x"$OPT" != x"-O3" ] && [ x"$MODE" != x"optlinux" ]; then
-  CFLAGS="$CFLAGS -fno-schedule-insns2"
+  if [ $CLANG -eq 0 ]; then
+    CFLAGS="$CFLAGS -fno-schedule-insns2"
+  fi
 fi
 
-CC_X86_64="$BIN/x86_64-linux-cosmo-gcc"
-CC_AARCH64="$BIN/aarch64-linux-cosmo-gcc"
-if [ x"$PROG" != x"${PROG%++}" ]; then
-  CC_X86_64="$BIN/x86_64-linux-cosmo-g++"
-  CC_AARCH64="$BIN/aarch64-linux-cosmo-g++"
-  CFLAGS="$CFLAGS -fno-rtti -fno-exceptions -fuse-cxa-atexit"
+if [ x"$X" = x"c" ] || [ x"$X" = x"c-header" ]; then
+  CPLUSPLUS=0
+elif [ x"$X" = x"c++" ] || [ x"$X" = x"c++-header" ]; then
+  CPLUSPLUS=1
+elif [ x"$PROG" != x"${PROG%++}" ]; then
+  CPLUSPLUS=1
+else
+  CPLUSPLUS=0
+fi
+
+if [ $CPLUSPLUS -eq 1 ]; then
+  CC_X86_64=$CXX_X86_64
+  CC_AARCH64=$CXX_AARCH64
   CPPFLAGS="-isystem $BIN/../include/third_party/libcxx $CPPFLAGS"
 else
   CFLAGS="$CFLAGS -Wno-implicit-int"
@@ -292,7 +389,7 @@ LDLIBS_X86_64="-lcosmo"
 
 CRT_AARCH64="$LIB_AARCH64/crt.o"
 CPPFLAGS_AARCH64="$CPPFLAGS -fsigned-char"
-CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28 -mno-outline-atomics"
+CFLAGS_AARCH64="$CFLAGS -ffixed-x18 -ffixed-x28"
 LDFLAGS_AARCH64="$LDFLAGS -L$LIB_AARCH64 -L$BIN/../aarch64-linux-cosmo/lib -Wl,-T,$LIB_AARCH64/aarch64.lds -Wl,-z,common-page-size=16384 -Wl,-z,max-page-size=16384"
 LDLIBS_AARCH64="-lcosmo"
 
@@ -303,11 +400,11 @@ if [ x"$MODE" = x"optlinux" ]; then
 fi
 
 if [ x"$OPT" != x"-Os" ] && [ x"$MODE" != x"tiny" ] && [ x"$MODE" != x"optlinux" ]; then
-  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
-  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 -fno-inline-functions-called-once -DFTRACE -DSYSDEBUG"
+  CFLAGS_X86_64="${CFLAGS_X86_64} -fpatchable-function-entry=18,16 $FNO_INLINE_FUNCTIONS_CALLED_ONCE -DFTRACE -DSYSDEBUG"
+  CFLAGS_AARCH64="${CFLAGS_AARCH64} -fpatchable-function-entry=7,6 $FNO_INLINE_FUNCTIONS_CALLED_ONCE -DFTRACE -DSYSDEBUG"
 fi
 
-if [ x"$PROG" != x"${PROG%++}" ]; then
+if [ $CPLUSPLUS -eq 1 ]; then
   LDLIBS_X86_64="-lcxx ${LDLIBS_X86_64}"
   LDLIBS_AARCH64="-lcxx ${LDLIBS_AARCH64}"
 fi
@@ -323,6 +420,9 @@ if [ $INTENT = cpp ]; then
   if [ -n "$OUTPUT" ]; then
     ARGS="$ARGS -o$OUTPUT"
   fi
+  # undefine cpu-specific and linux-specific defines
+  # we get rid of long double too to not lead astray
+  # we shall leave behind unix, __unix, and __unix__
   set -- \
       "$CC_X86_64" \
       -U__k8 \
@@ -331,10 +431,21 @@ if [ $INTENT = cpp ]; then
       -U__amd64__ \
       -U__x86_64 \
       -U__x86_64__ \
+      -U__MMX__ \
+      -U__MMX_WITH_SSE__ \
+      -U__SSE_MATH__ \
+      -U__SEG_FS \
+      -U__SEG_GS \
       -U__SSE__ \
+      -U__FXSR__ \
       -U__SSE2__ \
       -U__SSE2_MATH__ \
+      -Ulinux \
+      -U__linux \
+      -U__linux__ \
+      -U__gnu_linux__ \
       -mno-red-zone \
+      -mlong-double-64 \
       $PLATFORM \
       $CPPFLAGS \
       $ARGS
@@ -384,6 +495,7 @@ build_object() {
   (
     set -- \
         "$CC_X86_64" \
+        $TARGET_X86_64 \
         -o"$OUTPUT_X86_64" \
         $PLATFORM \
         $PREDEF \
@@ -405,6 +517,7 @@ build_object() {
   (
     set -- \
         "$CC_AARCH64" \
+        $TARGET_AARCH64 \
         -o"$OUTPUT_AARCH64" \
         $PLATFORM \
         $PREDEF \
@@ -511,6 +624,7 @@ TEMP_FILES="${TEMP_FILES} $out2"
 (
   set -- \
       "$CC_X86_64" \
+      $TARGET_X86_64 \
       -o"$OUTPUT_X86_64"\
       $CRT_X86_64 \
       $LDFLAGS_X86_64 \
@@ -528,6 +642,7 @@ pid1=$!
 (
   set -- \
       "$CC_AARCH64" \
+      $TARGET_AARCH64 \
       -o"$OUTPUT_AARCH64"\
       $CRT_AARCH64 \
       $LDFLAGS_AARCH64 \

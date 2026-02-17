@@ -83,10 +83,8 @@ SECTIONS {
     *(.eh_frame_hdr)
     *(.eh_frame_entry .eh_frame_entry.*)
   }
-  .eh_frame : ONLY_IF_RO {
-    KEEP(*(.eh_frame))
-    *(.eh_frame.*)
-  }
+  __eh_frame_hdr_start = SIZEOF(.eh_frame_hdr) > 0 ? ADDR(.eh_frame_hdr) : 0;
+  __eh_frame_hdr_end = SIZEOF(.eh_frame_hdr) > 0 ? . : 0;
   .gcc_except_table : ONLY_IF_RO {
     *(.gcc_except_table .gcc_except_table.*)
   }
@@ -101,9 +99,11 @@ SECTIONS {
   PROVIDE(etext = .);
   . += CONSTANT(MAXPAGESIZE);
   . = DATA_SEGMENT_ALIGN(CONSTANT(MAXPAGESIZE), CONSTANT(COMMONPAGESIZE));
-  .eh_frame : ONLY_IF_RW {
+  .eh_frame : {
+    __eh_frame_start = .;
     KEEP(*(.eh_frame))
     *(.eh_frame.*)
+    __eh_frame_end = .;
   }
   .gnu_extab : ONLY_IF_RW {
     *(.gnu_extab)

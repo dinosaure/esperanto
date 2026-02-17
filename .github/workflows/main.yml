@@ -5,17 +5,25 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
-        ocaml-version: ["4.13.0", "4.13.1", "4.14.0", "4.14.1", "4.14.2"]
+        ocaml-version: ["5.3.0"]
     runs-on: ${{ matrix.operating-system }}
     steps:
-    - uses: actions/checkout@v2
-    - uses: ocaml/setup-ocaml@v2
+    - uses: nschloe/action-cached-lfs-checkout@v1
+#    - uses: actions/checkout@v4
+#      with:
+#        lfs: true
+    - uses: ocaml/setup-ocaml@v3
       with:
         ocaml-compiler: ${{ matrix.ocaml-version }}
         allow-prerelease-opam: true
 # See jart/cosmopolitan#3
     - name: Fix binfmt and Cosmopolitan
-      run: sudo sh -c "echo ':APE:M::MZqFpD::/bin/sh:' >/proc/sys/fs/binfmt_misc/register"
+      run: |
+        sudo wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
+        sudo chmod +x /usr/bin/ape
+        sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+    - name: Use the upstream version of OCaml 5.3.0
+      run: opam switch create 5.3.0
     - name: Pinning packages
       run: opam pin add -t -yn -vvv --kind=path --with-version=dev .
     - name: Install cosmopolitan/esperanto and dune

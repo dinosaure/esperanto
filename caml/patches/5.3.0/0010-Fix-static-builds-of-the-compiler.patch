@@ -1,0 +1,49 @@
+From 6445eb911ce4ab68cdb6c3186b4652a3538f4cbb Mon Sep 17 00:00:00 2001
+From: David Allsopp <david.allsopp@metastack.com>
+Date: Sun, 15 Dec 2024 17:34:16 +0000
+Subject: [PATCH 10/21] Fix static builds of the compiler
+
+ocamlc -custom needs to include <caml/mlvalues.h> and therefore the
+build has -I runtime in order to facilitate this. -I runtime breaks
+cross-compilation, since it causes the .a files in runtime to be found
+by the host ocamlopt instead of its own.
+
+This workaround defeats that problem by adding + to VPATH as the first
+include, which will cause the host compiler's Standard Library directory
+(which includes the runtime .a files) to be included first in the search
+path. When building the compiler's libraries (which should be using the
+target's Standard Library, not the host's), -nostdlib -I stdlib is
+already inserted before VPATH by the build system, which means this
+mechanism never interferes with the selection of the correct Standard
+Library.
+---
+ Makefile.cross | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/Makefile.cross b/Makefile.cross
+index e01792de20..0d2cf8f323 100644
+--- a/Makefile.cross
++++ b/Makefile.cross
+@@ -25,6 +25,19 @@
+ # have to be lazier.
+ HOST_ZSTD_LIBS=$(shell grep ^ZSTD_LIBS= "$$(ocamlopt -where)/Makefile.config")
+ 
++# The build system adds various include directories which pertain to the current
++# tree, including -I runtime, which is necessary for -custom executables.
++# ocamltest is always a -custom executable, but some others (ocamldoc; the
++# debugger, etc.) are only -custom in specific circumstances. It is therefore
++# fiddly to change this in the main build system, so we perform a slightly
++# different trick by ensuring that "+" is the first entry in VPATH. This will
++# put the host compiler's standard library (and consequently its runtime
++# objects) well above the .a files found with -I runtime. For now, this seems
++# the least nefarious way of ensuring that the bytecode compiler has the C
++# headers in runtime/caml available without breaking builds with an external
++# ocamlopt.
++VPATH := + $(VPATH)
++
+ CROSS_OVERRIDES=OCAMLRUN=ocamlrun NEW_OCAMLRUN=ocamlrun \
+   BOOT_OCAMLLEX=ocamllex OCAMLYACC=ocamlyacc
+ CROSS_COMPILER_OVERRIDES=$(CROSS_OVERRIDES) CAMLC=ocamlc CAMLOPT=ocamlopt \
+-- 
+2.47.2
+

@@ -1,0 +1,26 @@
+diff --git a/runtime/signals.c b/runtime/signals.c
+index ab6106b..108e2d1 100644
+--- a/runtime/signals.c
++++ b/runtime/signals.c
+@@ -500,7 +500,7 @@ CAMLexport value caml_process_pending_actions_exn(void)
+ #define SIGXFSZ -1
+ #endif
+ 
+-static const int posix_signals[] = {
++static int posix_signals[] = {
+   SIGABRT, SIGALRM, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
+   SIGQUIT, SIGSEGV, SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD, SIGCONT,
+   SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU, SIGVTALRM, SIGPROF, SIGBUS,
+diff --git a/runtime/sys.c b/runtime/sys.c
+index 3356664..6b202ea 100644
+--- a/runtime/sys.c
++++ b/runtime/sys.c
+@@ -218,7 +218,7 @@ CAMLprim value caml_sys_exit(value retcode)
+ #endif
+ #endif
+ 
+-static const int sys_open_flags[] = {
++static int sys_open_flags[] = {
+   O_RDONLY, O_WRONLY, O_APPEND | O_WRONLY, O_CREAT, O_TRUNC, O_EXCL,
+   O_BINARY, O_TEXT, O_NONBLOCK
+ };

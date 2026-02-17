@@ -1,0 +1,97 @@
+diff --color -u a/runtime/signals.c b/runtime/signals.c
+--- a/runtime/signals.c	2025-06-23 11:47:54.440647259 +0200
++++ b/runtime/signals.c	2025-06-23 11:48:11.068194405 +0200
+@@ -413,93 +413,6 @@
+   return caml_result_get_encoded_exception(res);
+ }
+ 
+-/* OS-independent numbering of signals */
+-
+-#ifndef SIGABRT
+-#define SIGABRT -1
+-#endif
+-#ifndef SIGALRM
+-#define SIGALRM -1
+-#endif
+-#ifndef SIGFPE
+-#define SIGFPE -1
+-#endif
+-#ifndef SIGHUP
+-#define SIGHUP -1
+-#endif
+-#ifndef SIGILL
+-#define SIGILL -1
+-#endif
+-#ifndef SIGINT
+-#define SIGINT -1
+-#endif
+-#ifndef SIGKILL
+-#define SIGKILL -1
+-#endif
+-#ifndef SIGPIPE
+-#define SIGPIPE -1
+-#endif
+-#ifndef SIGQUIT
+-#define SIGQUIT -1
+-#endif
+-#ifndef SIGSEGV
+-#define SIGSEGV -1
+-#endif
+-#ifndef SIGTERM
+-#define SIGTERM -1
+-#endif
+-#ifndef SIGUSR1
+-#define SIGUSR1 -1
+-#endif
+-#ifndef SIGUSR2
+-#define SIGUSR2 -1
+-#endif
+-#ifndef SIGCHLD
+-#define SIGCHLD -1
+-#endif
+-#ifndef SIGCONT
+-#define SIGCONT -1
+-#endif
+-#ifndef SIGSTOP
+-#define SIGSTOP -1
+-#endif
+-#ifndef SIGTSTP
+-#define SIGTSTP -1
+-#endif
+-#ifndef SIGTTIN
+-#define SIGTTIN -1
+-#endif
+-#ifndef SIGTTOU
+-#define SIGTTOU -1
+-#endif
+-#ifndef SIGVTALRM
+-#define SIGVTALRM -1
+-#endif
+-#ifndef SIGPROF
+-#define SIGPROF -1
+-#endif
+-#ifndef SIGBUS
+-#define SIGBUS -1
+-#endif
+-#ifndef SIGPOLL
+-#define SIGPOLL -1
+-#endif
+-#ifndef SIGSYS
+-#define SIGSYS -1
+-#endif
+-#ifndef SIGTRAP
+-#define SIGTRAP -1
+-#endif
+-#ifndef SIGURG
+-#define SIGURG -1
+-#endif
+-#ifndef SIGXCPU
+-#define SIGXCPU -1
+-#endif
+-#ifndef SIGXFSZ
+-#define SIGXFSZ -1
+-#endif
+-
+ static int posix_signals[] = {
+   SIGABRT, SIGALRM, SIGFPE, SIGHUP, SIGILL, SIGINT, SIGKILL, SIGPIPE,
+   SIGQUIT, SIGSEGV, SIGTERM, SIGUSR1, SIGUSR2, SIGCHLD, SIGCONT,

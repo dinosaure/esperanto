@@ -83,7 +83,6 @@ extern uint64_t kStartTsc;
 extern const char kNtSystemDirectory[];
 extern const char kNtWindowsDirectory[];
 extern size_t __virtualmax;
-extern size_t __virtualsize;
 extern size_t __stackmax;
 extern bool32 __isworker;
 /* utilities */
@@ -95,6 +94,7 @@ int ftrace_install(void) libcesque;
 int ftrace_enabled(int) libcesque;
 int strace_enabled(int) libcesque;
 void __print_maps(size_t) libcesque;
+void __print_maps_win32(int64_t, const char *, size_t) libcesque;
 void __printargs(const char *) libcesque;
 /* builtin sh-like system/popen dsl */
 int _cocmd(int, char **, char **) libcesque;
@@ -113,14 +113,13 @@ void _weakfree(void *) libcesque;
 void *_mapanon(size_t) attributeallocsize((1)) mallocesque libcesque;
 void *_mapshared(size_t) attributeallocsize((1)) mallocesque libcesque;
 void CheckForFileLeaks(void) libcesque;
-void __enable_threads(void) libcesque;
 void __oom_hook(size_t) libcesque;
 /* code morphing */
 void __morph_begin(void) libcesque;
 void __morph_end(void) libcesque;
 void __jit_begin(void) libcesque;
 void __jit_end(void) libcesque;
-void __clear_cache(void *, void *) libcesque;
+void __clear_cache(void *, void *);
 /* portability */
 bool32 IsGenuineBlink(void) libcesque;
 bool32 IsCygwin(void) libcesque;

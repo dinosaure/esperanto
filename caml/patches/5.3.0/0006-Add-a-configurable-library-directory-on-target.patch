@@ -1,0 +1,102 @@
+From 06f5a281e01fc42a8d597eb75ad73fc220da7170 Mon Sep 17 00:00:00 2001
+From: Samuel Hym <samuel@tarides.com>
+Date: Wed, 2 Oct 2024 13:24:03 +0200
+Subject: [PATCH 06/21] Add a configurable library directory on target
+
+Add a `TARGET_LIBDIR` variable to `configure` and assign a Makefile
+`TARGET_LIBDIR` variable with it
+Use the value of `LIBDIR` by default for this new variable
+Use `TARGET_LIBDIR` to define the `OCAML_STDLIB_DIR` macro used by the
+runtime
+
+When building a cross compiler, the OCaml standard library has no reason
+to be found at the same paths on the host and on the target. This allows
+users to provide a path that is meaningful to look for libraries to link
+dynamically on the target.
+---
+ Makefile           |   2 +-
+ Makefile.config.in |   5 ++++-
+ configure          | Bin 704715 -> 704961 bytes
+ configure.ac       |   8 ++++++++
+ 4 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 044012f1d9..1ec0bd20b2 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1393,7 +1393,7 @@ C_LITERAL = $(shell $(SAK) encode-C-literal '$(1)')
+ 
+ runtime/build_config.h: $(ROOTDIR)/Makefile.config $(SAK)
+ 	$(V_GEN)echo '/* This file is generated from $(ROOTDIR)/Makefile.config */' > $@ && \
+-	echo '#define OCAML_STDLIB_DIR $(call C_LITERAL,$(LIBDIR))' >> $@ && \
++	echo '#define OCAML_STDLIB_DIR $(call C_LITERAL,$(TARGET_LIBDIR))' >> $@ && \
+ 	echo '#define HOST "$(HOST)"' >> $@
+ 
+ ## Runtime libraries and programs
+diff --git a/Makefile.config.in b/Makefile.config.in
+index e432851cde..522c0f6338 100644
+--- a/Makefile.config.in
++++ b/Makefile.config.in
+@@ -46,9 +46,12 @@ BINDIR=@bindir@
+ 
+ datarootdir=@datarootdir@
+ 
+-### Where to install the standard library
++### Where to install the standard library on host
+ LIBDIR=@libdir@
+ 
++### Where to look for the standard library on target
++TARGET_LIBDIR=@TARGET_LIBDIR@
++
+ ### Where to install the stub code for the standard library
+ STUBLIBDIR=@libdir@/stublibs
+ 
+diff --git a/configure b/configure
+index b9cd0229890350b736c804eaa7cc97a9e8910aef..21a2617e3958bd64ddfc1fb914d1c6c9b9fed1dc 100755
+GIT binary patch
+delta 252
+zcmX@zsC}?mdqYehZ-`@%yK6|ikEfH1XVB*8K!1KNgwW<?35FR+{K>s1lvr{ylZqzq
+zIw9q*qfnBskd&%WTAZ4qkd|M>rGNrbD)VwO^RlfKQc}|rOLIz!LCQ-qQWeS)b4pVc
+z^3xQ6CZ%K+ZN75i@TTq4su^94r;Fz^Nw$Al#|XqsK+FupEI`Z(#B4y!zWviWjtj4h
+p5iSHeT1mlHp@Iu&aGrt{&<QAVwn{1xOO)C-&E(v^X(pGXIsjQ~TZ;ey
+
+delta 79
+zcmX@utbMvsdqYg%=Bz+J{>{e{bTc-$pFFT>yGIS9i}7@p?Tq5>OV=|3F%u9o12GE_
+cvjQ<25VLPzx}M|0tM(nUIJfVZ#l@)(0Ik*}S^xk5
+
+diff --git a/configure.ac b/configure.ac
+index bb661f9f6a..9b0331cdee 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -256,6 +256,7 @@ AC_SUBST([build_libraries_manpages])
+ AC_SUBST([compute_deps])
+ AC_SUBST([ocaml_bindir])
+ AC_SUBST([ocaml_libdir])
++AC_SUBST([TARGET_LIBDIR])
+ AC_SUBST([QS])
+ AC_SUBST([ar_supports_response_files])
+ 
+@@ -522,6 +523,10 @@ AC_ARG_ENABLE([cmm-invariants],
+ AC_ARG_VAR([TARGET_BINDIR],
+   [location of the runtime binaries on the target system])
+ 
++AC_ARG_VAR([TARGET_LIBDIR],
++  [location of the libraries on the target system, to be used for dynlink;
++  defaults to the value of libdir])
++
+ AC_ARG_WITH([target-sh],
+   [AS_HELP_STRING([--with-target-sh],
+     [location of Posix sh on the target system])],
+@@ -2693,6 +2698,9 @@ AC_CONFIG_COMMANDS_PRE([cclibs="$cclibs $mathlib $DLLIBS $PTHREAD_LIBS"])
+ AS_IF([test x"$libdir" = x'${exec_prefix}/lib'],
+   [libdir="$libdir"/ocaml])
+ 
++AS_IF([test x"$TARGET_LIBDIR" = x],
++  [TARGET_LIBDIR="$libdir"])
++
+ AS_IF([test x"$mandir" = x'${datarootdir}/man'],
+   [mandir='${prefix}/man'])
+ 
+-- 
+2.47.2
+

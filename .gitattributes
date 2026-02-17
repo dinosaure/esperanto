@@ -1,0 +1,4 @@
+*.a filter=lfs diff=lfs merge=lfs -text
+clang filter=lfs diff=lfs merge=lfs -text
+cc1 filter=lfs diff=lfs merge=lfs -text
+cc1plus filter=lfs diff=lfs merge=lfs -text
